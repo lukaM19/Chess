@@ -1,15 +1,16 @@
 # Chess
 Chess engine
 
-##Done
-*Board
-*FEN interpreter
+## Done
+
+- [x]  Board
+- [x]  FEN2Board interpreter
 
 
-##Done-ish
+## Done-ish
 
-##To-Do
-*Genral Rules
-*GUI??
-*Create a general bot
-*2-player mode
+## To-Do
+* Genral Rules
+* GUI??
+* Create a general bot
+* 2-player mode
