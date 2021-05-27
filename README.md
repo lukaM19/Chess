@@ -7,10 +7,16 @@ Chess engine
 - [x]  FEN2Board interpreter
 
 ## Done-ish
-
+* GUI??
+ > - [x] Menu skeleton 
+ > - [x] Basic navigation
+ > - [x] Custom starting positions
+ > - [ ] select Bot/2-player mode
+ > - [ ] probably will need to set depth in future
+*
 ## To-Do
-* Genral Rules
 * Movable Pieces
+* Genral Rules
 * GUI??
 * Create a general bot
 * 2-player mode
