@@ -46,6 +46,8 @@ def fen_2board(fen):
     return board,to_Move,castling,en_Passant,n_Fmove,n_Hmove
  
 class GameState():
-    def __init__(self):
-        self.board,to_Move,castling,en_Passant,n_Hmove,n_Fmove =fen_2board(start_Fen)
-
+    def __init__(self,init_fen):
+        if init_fen:
+            self.board,self.to_Move,castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(init_fen)
+        else:
+            self.board,self.to_Move,castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(start_Fen)
