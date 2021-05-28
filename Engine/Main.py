@@ -34,6 +34,7 @@ def main_game(START_POS):
     
     gs = Engine.GameState(START_POS)
     loadPieces()
+    move_sound = pg.mixer.Sound("Chess/move.wav")
     running=True
     selected=()
     sel_list=[]
@@ -67,7 +68,8 @@ def main_game(START_POS):
                             
                             move=Engine.Move(sel_list,gs.board)
                             gs.make_Move(move)
-                            
+                            pg.mixer.Sound.play(move_sound)
+                            pg.mixer.music.stop()
                             last_move=sel_list
                             
                             selected=()
@@ -94,6 +96,8 @@ def main_game(START_POS):
                 
                 move=Engine.Move(last_move,gs.board)
                 gs.undo_Move()
+                pg.mixer.Sound.play(move_sound)
+                pg.mixer.music.stop()
                 
         clock.tick(MAX_FPS)
         pg.display.flip()
