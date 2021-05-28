@@ -17,7 +17,7 @@ Chess engine
  > - [ ] probably will need to set depth from menu in future
 * Game
  > - [ ] drag animation
- > = [ ] add sound effect for moving
+ > - [ ] add sound effect for moving
 
 ## To-Do
 * Genral Rules
