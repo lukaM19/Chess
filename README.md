@@ -5,21 +5,24 @@ Chess engine
 
 - [x]  Board
 - [x]  FEN2Board interpreter
-
+- [x]  2-player mode
+- [x]  Movable Pieces, Undo Moves, Move Order maintained
+- [ ]  
 ## Done-ish
 * GUI??
  > - [x] Menu skeleton 
  > - [x] Basic navigation
  > - [x] Custom starting positions
  > - [ ] select Bot/2-player mode
- > - [ ] probably will need to set depth in future
-*
+ > - [ ] probably will need to set depth from menu in future
+* Game
+ > - [ ] drag animation
+ > = [ ] add sound effect for moving
+
 ## To-Do
-* Movable Pieces
 * Genral Rules
-* GUI??
 * Create a general bot
-* 2-player mode
+* GUI??
 
 
 # **Resources**
@@ -29,4 +32,4 @@ Chess engine
 > 
 > https://www.chessprogramming.org/Main_Page
 > 
-> https://www.youtube.com/watch?v=EnYui0e73Rs
+
