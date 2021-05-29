@@ -31,6 +31,7 @@ def main_game(START_POS):
     screen_bl=pg.transform.rotate(screen, 180), (0, 0)
     clock=pg.time.Clock()
     screen.fill(pg.Color("white"))
+
     
     gs = Engine.GameState(START_POS)
     loadPieces()
@@ -39,7 +40,11 @@ def main_game(START_POS):
     selected=()
     sel_list=[]
     last_move=[]
-    t_brd=[]
+    t=IMAGES["wR"]
+    tr=pg.Rect(0,0,150,150)
+    hold = False 
+    cur=""
+    pos=()
     while running:
         mx,my = pg.mouse.get_pos()
         click = False
@@ -49,17 +54,35 @@ def main_game(START_POS):
             if e.type == pg.MOUSEBUTTONDOWN:
                 if e.button == 1:
                     click = True
+                    hold=False
                 if mx>20 and my<720:
+                    
                     row=(my)//SQ
                     col=(mx-edge_pix)//SQ
+                    if gs.board[row][col] != "em":
+                        hold=True
+                        selected = (row,col)
+                        sel_list.append(selected)
+                        cur=gs.board[row][col]
+                        t=IMAGES[cur]
+                        tr=t.get_rect()
+            
+            if e.type == pg.MOUSEBUTTONUP and hold:
+                if mx>20 and my<720:  
+                    row=(my)//SQ
+                    col=(mx-edge_pix)//SQ    
                     if selected == (row,col):
                         selected=()
                         sel_list=[]
+                        hold=False
                     else:
                         selected = (row,col)
                         sel_list.append(selected)
+                    
+
+
                     if len(sel_list)==2 :
-                        
+                        hold=False
                        
                         if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") or gs.to_Move != COLOR[gs.board[sel_list[0][0]][sel_list[0][1]]]:
                             selected=()
@@ -74,11 +97,30 @@ def main_game(START_POS):
                             
                             selected=()
                             sel_list=[]
-                            
-                    #print(mx,my,row,col)
+                else:
+                    hold = False
+                    selected=()
+                    sel_list=[]
+            
+            if e.type == pg.MOUSEMOTION:
+            
+                pos=pg.mouse.get_pos()
+                if hold and (mx>45 and my<680) :
+                    tr.center = (pos)
+                    screen.blit(t,tr)   
+                pg.display.flip()
+                clock.tick(60)
+
+        if hold  and (mx>45 and my<680):
+            tr.center = pos
+            screen.blit(t,tr)    
+            pg.display.flip()
+            clock.tick(60)
+
         drawGame(screen,gs)
+
         end=time.time()
-        
+
         text = font.render("Quit", True, 'pink')
         textRect = text.get_rect()
         textRect.center = (SQ-70,HEIGHT+10)
@@ -87,19 +129,20 @@ def main_game(START_POS):
             if click:
             
                 main_Menu()
+                
         undot = font.render("Undo", True, 'pink')
         undoRect = undot.get_rect()
         undoRect.center = (SQ-70,HEIGHT+30)
         screen.blit(undot, undoRect)
         if undoRect.collidepoint((mx,my)) :
-            if click:
+            if click and len(last_move) !=0:
                 
                 move=Engine.Move(last_move,gs.board)
                 gs.undo_Move()
                 pg.mixer.Sound.play(move_sound)
                 pg.mixer.music.stop()
                 
-        clock.tick(MAX_FPS)
+        clock.tick(60)
         pg.display.flip()
     print('time taken:',start-end)
     
@@ -108,6 +151,7 @@ def drawGame(screen,gs):
     drawPieces(screen,gs.board)
 
 
+    
 
 def drawBoard(screen):
     colors=[pg.Color(222,184,135),pg.Color(139,69,19)]
