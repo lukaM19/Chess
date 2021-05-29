@@ -73,7 +73,43 @@ class GameState():
                 self.to_Move='b'
             else:
                 self.to_Move='w'
-            pass
+    
+    def getAllMoves():
+        pass
+    
+    
+    def getPawnMoves(self,r,c,moves,piece):
+        k=1
+        same=piece[0]
+        
+        
+        if same=='w':
+             k=-1
+        else:
+             k=1
+        
+        for i in range(-1,2):
+            if  (r+k*1)<=7 and (r+k*1)>=0 and (c+i)>=0 and (c+i)<=7:
+                if i != 0:
+                    if(self.board[r+k*1][c+i]!="em" and self.board[r-1][c+i][0] != same):
+                        move=self.Move(((r,c),(r-i,c)),self.board)
+                        movenot=self.Move.inNotation(move)
+                        moves.append(movenot)
+                else:
+                    if(self.board[r+k*1][c+i]=="em"):
+                        move=self.Move(((r,c),(r-i,c)),self.board)
+                        movenot=self.Move.inNotation(move)
+                        moves.append(movenot)
+        if(r==1 or r==6):                
+            if(self.board[r+k*2][c]=="em"):
+                move=self.Move(((r,c),(r-i,c)),self.board)
+                movenot=self.Move.inNotation(move)
+                moves.append(movenot)
+        
+
+        #self.board[r][c]
+
+
         
         
 class Move():
@@ -103,6 +139,8 @@ class Move():
         self.piece_cap = board[self.end_row][self.end_col]
     
     def inNotation(self):
+        return self.piece_moved+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
+    def inChessNotation(self):
         return self.N2Piece[self.piece_moved]+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
     def test(self):
         return self.piece_moved+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
