@@ -35,6 +35,7 @@ def main_game(START_POS):
     
     gs = Engine.GameState(START_POS)
     loadPieces()
+    validmoves=gs.getAllMoves()
     move_sound = pg.mixer.Sound("Chess/move.wav")
     running=True
     selected=()
@@ -53,8 +54,13 @@ def main_game(START_POS):
     high_sur.set_alpha(25)
     move_made= False
     highB=False
+    counter=0
+    mark_d=0
+    mark_md=0
+
+
     while running:
-        
+        counter+=1
         mx,my = pg.mouse.get_pos()
         click = False
         for e in pg.event.get():
@@ -104,13 +110,19 @@ def main_game(START_POS):
                             
                             move=Engine.Move(sel_list,gs.board)
                             print(Engine.Move.inNotation(move))
-                            gs.make_Move(move)
-                            pg.mixer.Sound.play(move_sound)
-                            pg.mixer.music.stop()
-                            last_move=sel_list
-                            move_made=True
-                            selected=()
-                            sel_list=[]
+                            rn=Engine.Move.inNotation(move)
+                            if(rn in validmoves):
+                                gs.make_Move(move)
+                                pg.mixer.Sound.play(move_sound)
+                                pg.mixer.music.stop()
+                                last_move=sel_list
+                                move_made=True
+                                selected=()
+                                sel_list=[]
+                                mark_md=counter
+                            else:
+                                selected=()
+                                sel_list=[]
                 else:
                     hold = False
                     selected=()
@@ -122,8 +134,9 @@ def main_game(START_POS):
 
         if hold  and (mx>45 and my<680):
             highB= True
-           
-           
+        if move_made and mark_d<mark_md:
+            validmoves=gs.getAllMoves()  
+            mark_d=counter
               
             
         drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr)
@@ -151,6 +164,7 @@ def main_game(START_POS):
                 gs.undo_Move()
                 pg.mixer.Sound.play(move_sound)
                 pg.mixer.music.stop()
+                validmoves=gs.getAllMoves()  
                 move_made = False
         clock.tick(60)
         pg.display.flip()
