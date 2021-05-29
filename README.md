@@ -17,6 +17,13 @@ Chess engine
  > - [ ] probably will need to set depth from menu in future
 * Game
  > - [ ] pawn promotion, castling(&undo), enpassant(& undo)
+* Game Rules
+> - [x] Pawn
+> - [ ] Rook
+> - [x] Knight
+> - [ ] Bishop
+> - [ ] King
+> - [ ] Queen
 ## To-Do
 * Genral Rules
 * Create a general bot
