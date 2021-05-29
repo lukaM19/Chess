@@ -6,7 +6,7 @@ Chess engine
 - [x]  Board
 - [x]  FEN2Board interpreter
 - [x]  2-player mode
-- [x]  Movable Pieces, Undo Moves, Move Order maintained
+- [x]  Movable Pieces, Undo Moves, Move Order maintained, drag animation, add sound effect for moving
 - [ ]  
 ## Done-ish
 * GUI??
@@ -16,9 +16,7 @@ Chess engine
  > - [ ] select Bot/2-player mode
  > - [ ] probably will need to set depth from menu in future
 * Game
- > - [ ] drag animation
- > - [ ] add sound effect for moving
-
+ > - [ ] pawn promotion, castling(&undo), enpassant(& undo)
 ## To-Do
 * Genral Rules
 * Create a general bot
