@@ -8,14 +8,14 @@ pg.init()
 WIDTH = HEIGHT = 720
 DIMENSION = 8
 SQ= HEIGHT//DIMENSION
-MAX_FPS=15
+MAX_FPS = 60
 IMAGES = {}
-LETR={1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H' }
-COLOR={'wR':'w','wN':'w','wB':'w','wQ':'w','wK':'w','wP':'w','bR':'b','bN':'b','bB':'b','bQ':'b','bK':'b','bP':'b'}
+LETR = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h' }
+COLOR = {'wR':'w','wN':'w','wB':'w','wQ':'w','wK':'w','wP':'w','bR':'b','bN':'b','bB':'b','bQ':'b','bK':'b','bP':'b'}
 click = False
 edge_pix=20
 LAUNCH = True
-font = pg.font.Font('freesansbold.ttf', 16)
+font = pg.font.Font('freesansbold.ttf', 14)
 
 #Loading Pieces
 def loadPieces():
@@ -24,13 +24,13 @@ def loadPieces():
         IMAGES[piece] =pg.transform.scale( pg.image.load("Chess/images_HR/"+piece+".png"),(SQ-int(SQ/4),SQ-int(SQ/4)) )
 
 #Main Game Process
-def mainGame(START_POS):
+def mainGame(START_POS,SHOW_MOVES):
     
     #Draw Game Window
     pg.display.set_caption('Play Game')
     start=time.time()
     screen = pg.display.set_mode((WIDTH+20,HEIGHT+40))
-    screen_bl=pg.transform.rotate(screen, 180), (0, 0)
+    #screen_bl=pg.transform.rotate(screen, 180), (0, 0)
     clock=pg.time.Clock()
     screen.fill(pg.Color("white"))
 
@@ -56,11 +56,14 @@ def mainGame(START_POS):
     bh_col = (0, 0, 255)
     h_loc=()
     highlight=(SQ,SQ)
+    
+    cir=pg.Surface((20,20))
+    cir.set_alpha(60)
     high_sur=pg.Surface(highlight)
     high_sur.set_alpha(25)
     move_made= False
     highB=False
-
+    out = False
     #Helps us make sure we only load valid moves once, after each move has been played
     counter=0
     mark_d=0
@@ -87,8 +90,8 @@ def mainGame(START_POS):
                     row=(my)//SQ
                     col=(mx-edge_pix)//SQ
                     if gs.board[row][col] != "em":
-                        hold=True
                         selected = (row,col)
+                        hold=True
                         sel_list.append(selected)
                         cur=gs.board[row][col]
                         t=IMAGES[cur]
@@ -154,9 +157,9 @@ def mainGame(START_POS):
             mark_d=counter
               
         #update the display   
-        drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr)
+        drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES)
         highB = False
-
+        
         end=time.time()
 
         #Quit Button and interaction on Click
@@ -183,24 +186,54 @@ def mainGame(START_POS):
                 pg.mixer.music.stop()
                 validmoves=gs.getAllMoves()  
                 move_made = False
+        #Give FEN of given position
+        givet = font.render("Export Fen", True, 'pink')
+        giveRect = givet.get_rect()
+        giveRect.center = (WIDTH//4,HEIGHT+25)
+        screen.blit(givet, giveRect)
+        if giveRect.collidepoint((mx,my)) :
+            if click :
+                out = not out
+        if out:
+            font_c = pg.font.Font('freesansbold.ttf', 10)
+            txt=gs.Board2Fen()
+            txt_t=font.render(txt, True, 'black')
+            out_w=txt_t.get_width()+5
+            outRect = txt_t.get_rect()
+            outRect.center = (WIDTH//4+givet.get_width()//2 + out_w//2 ,HEIGHT+25)
+            screen.blit(txt_t, outRect)
+                
+            
         #Set FPS apply Changes
         clock.tick(60)
         pg.display.flip()
     print('time taken:',start-end)
 
 #Function for Drawing all parts of the game: Board, Pieces, Highlights    
-def drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr):
+def drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES):
+    screen.fill(pg.Color("white"))
     drawBoard(screen)
     drawPieces(screen,gs.board)
-    drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr)
+    drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,gs.board,selected,cir,SHOW_MOVES)
 
 #Function for drawing highlights on the board   
-def drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr):
+def drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,board,selected,cir,SHOW_MOVES):
     if highB:
         tr.center = pos
         screen.blit(t,tr)
         pg.draw.rect(high_sur, gh_col, high_sur.get_rect())
         screen.blit(high_sur,(h_loc[1]*SQ+edge_pix,h_loc[0]*SQ))
+        
+        if SHOW_MOVES== True:
+            for v in validmoves :
+                
+                if str(v[:4]) == str(board[selected[0]][selected[1]]+str(selected[0])+str(selected[1])):
+
+                    #cr=pg.draw.circle(cir, gh_col, (int(v[5])*SQ+edge_pix+SQ/2-10, int(v[4])*SQ+SQ/2-10), 10,2)
+                    pg.draw.rect(cir,gh_col,cir.get_rect())
+                    screen.blit(cir,(int(v[5])*SQ+edge_pix+SQ/2-10, int(v[4])*SQ+SQ/2-10)) 
+                
+                
     if move_made: 
         pg.draw.rect(high_sur, bh_col, high_sur.get_rect())
         screen.blit(high_sur,(last_move[0][1]*SQ+edge_pix,last_move[0][0]*SQ)) 
@@ -211,16 +244,17 @@ def drawBoard(screen):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color=colors[((r+c)%2)]
+            cl=colors[1-((r+c)%2)]
             pg.draw.rect(screen, color, pg.Rect(c*SQ+edge_pix,r*SQ,SQ,SQ))
             if r==7:
-                text = font.render(LETR[c+1], True, 'black')
+                text = font.render(LETR[c+1], True, cl)
                 textRect = text.get_rect()
-                textRect.center = (c*SQ+edge_pix+SQ/2,HEIGHT+10)
+                textRect.center = (c*SQ+SQ+14,HEIGHT-10)
                 screen.blit(text, textRect)
             if c==0:
-                text = font.render(str((8-r)), True, 'black')
+                text = font.render(str((8-r)), True, cl)
                 textRect = text.get_rect()
-                textRect.center = (c*SQ+SQ/8,r*SQ+edge_pix)
+                textRect.center = (c*SQ+30,r*SQ+edge_pix)
                 screen.blit(text, textRect)
     
 # Draw the pieces on the screen 
@@ -232,14 +266,13 @@ def drawPieces(screen,board):
                 screen.blit(IMAGES[p],pg.Rect(c*SQ+SQ/8+edge_pix,r*SQ+edge_pix,SQ,SQ))
 
 
-
-
 def main_Menu():
     pg.init()
     input = ''
     #Bool variable for indicating if we should accept input from keyboard for the FEN String
-    ST_INPUT=False
+    ST_INPUT = False
     START_POS=""
+    SHOW_MOVES = False
     while LAUNCH == True:
         #INITIALIZE the display
         pg.display.set_caption('MAIN MENU')
@@ -271,6 +304,18 @@ def main_Menu():
         textRect.center = (WIDTH//2,100+HEIGHT//6+button[1]/2)
         settings_sc.blit(text, textRect)
 
+        button_5 = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+120,170,40)
+        color=""
+        if SHOW_MOVES:
+            color='green'
+        else:
+            color='red'
+        pg.draw.rect(settings_sc,color,button_5)
+        text = font.render("Higlight available moves", True, 'white')
+        textRect = text.get_rect()
+        textRect.center = (WIDTH//2,160+HEIGHT//6+button[1]/2)
+        settings_sc.blit(text, textRect)
+
         #BUTTON_4~Quit Button 
         button_4 = pg.Rect(WIDTH//2-button[0]/2,5*HEIGHT//6-button[1]/2,120,40)
         pg.draw.rect(settings_sc,'red',button_4)
@@ -287,7 +332,7 @@ def main_Menu():
         if button_1.collidepoint((mx,my)) :
             if click:
             
-                mainGame(START_POS)
+                mainGame(START_POS,SHOW_MOVES)
         #Set the input string as the starting positoin     
         if button_2.collidepoint((mx,my)) :
             if click:
@@ -297,6 +342,9 @@ def main_Menu():
             if click:
                 pg.quit()
                 sys.exit()
+        if button_5.collidepoint((mx,my)) :
+            if click:
+                SHOW_MOVES = not SHOW_MOVES
      
         click = False
         

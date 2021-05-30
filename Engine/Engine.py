@@ -39,7 +39,11 @@ def fen_2board(fen):
     #Which castes are left
     castling = st[2]
     #Seperate list of possible en Passant Moves
-    en_Passant = re.findall('..',st[3])
+    if len(st[3])>1:
+
+        en_Passant = re.findall('..',st[3])
+    else:
+        en_Passant= st[3]
     #Number of half moves made
     n_Hmove = int(st[4])
     #Number of fullmoves made
@@ -75,7 +79,7 @@ class Move():
         self.piece_cap = board[self.end_row][self.end_col]
     
     def inNotation(self):
-        return self.piece_moved+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
+        return self.piece_moved+str(self.st_row)+str(self.st_col)+str(self.end_row) +str(self.end_col)
     def inChessNotation(self):
         return self.N2Piece[self.piece_moved]+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
     def test(self):
@@ -161,7 +165,6 @@ class GameState():
                     if(self.board[r+k*1][c+i]!="em" and self.board[r+k*1][c+i][0] != same):
                         move=Move(((r,c),(r+k*1,c+i)),self.board)
                         movenot=Move.inNotation(move)
-                        print(movenot)
                         moves.append(movenot)
                 else:
                     if(self.board[r+k*1][c+i]=="em"):
@@ -444,4 +447,36 @@ class GameState():
                     break
         return moves
 
-       
+    def Board2Fen(self):
+        N2Piece={'bR':'r','bB':'b','bN':'n','bP':'p','bQ':'q','bK':'k','wR':'R','wB':'B','wN':'N','wP':'P','wQ':'Q','wK':'K'}
+        FEN=""
+        for r in range(len(self.board)):
+            k=0
+            for c in range(len(self.board[r])):
+                if self.board[r][c] == "em":
+                    
+                    k+=1
+                else:
+                    if k != 0:
+                      FEN+=str(k)
+                      FEN+=N2Piece[self.board[r][c]]
+                      k=0
+                    else:
+                     FEN+=N2Piece[self.board[r][c]]
+                if k==8:
+                    FEN+=str(k)
+            if k != 8:    
+                FEN+="/"
+        FEN+=" "
+        FEN+=self.to_Move
+        FEN+=" "
+        FEN+=self.castling
+        FEN+=" "
+        for v in self.en_Passant:
+            FEN+=v
+        FEN+=" "
+        FEN+=str(self.n_Hmove)
+        FEN+=" "
+        FEN+=str(self.n_Fmove)
+        return FEN  
+
