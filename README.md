@@ -1,10 +1,10 @@
 # Chess
-Chess engine
+Chess engine project
 
 ## Done
 
 - [x]  Board
-- [x]  FEN2Board interpreter
+- [x]  FEN2Board interpreter, Board2FEN export
 - [x]  2-player mode
 - [x]  Movable Pieces, Undo Moves, Move Order maintained, drag animation, add sound effect for moving
 - [ ]  
@@ -33,7 +33,7 @@ Chess engine
 * SWITCH LANGUAGES??
 
 # Known Bugs
-* the file and rank indexes get obstructed by piece drawings, if pieces are moved outside of board boundaries
+* <s>the file and rank indexes get obstructed by piece drawings, if pieces are moved outside of board boundaries </s>
 * Need to at an additional check for validity of Custom Fen
 
 # **Resources**
