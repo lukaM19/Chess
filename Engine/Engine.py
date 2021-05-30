@@ -1,7 +1,7 @@
 import re
 start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 ##test_fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
-test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
+##test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
 def to_piece(ch):
     return {
         'r':"bR",
@@ -18,7 +18,7 @@ def to_piece(ch):
         'P':"wP",
 
     }.get(ch)
-
+#FEN notation to 2D board translator
 def fen_2board(fen):
     board =[ ["em"]*8 for i in range(8)]
     st = fen.split()
@@ -34,17 +34,20 @@ def fen_2board(fen):
                 val = to_piece(i) 
                 board[ind][k] = val
                 k += 1
-    
+    #turn to move
     to_Move = st[1]
+    #Which castes are left
     castling = st[2]
+    #Seperate list of possible en Passant Moves
     en_Passant = re.findall('..',st[3])
+    #Number of half moves made
     n_Hmove = int(st[4])
+    #Number of fullmoves made
     n_Fmove = int(st[5])
 
-    ##for row in board:    
-       ## print(row)
     return board,to_Move,castling,en_Passant,n_Fmove,n_Hmove
- 
+
+#Move class for making handling a move easier, also produces notations for the given moves 
 class Move():
     Num2LETR={1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H' }
     Piece2N={'r':'bR',
@@ -78,14 +81,17 @@ class Move():
     def test(self):
         return self.piece_moved+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
 
+#Main Class for the Game board making moves etc
 class GameState():
     N2Piece={'bR':'r','bB':'b','bN':'n','bP':'p','bQ':'q','bK':'k','wR':'R','wB':'B','wN':'N','wP':'P','wQ':'Q','wK':'K'}
+
     def __init__(self,init_fen):
         self.log=[]
         if init_fen:
             self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(init_fen)
         else:
             self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(start_Fen)
+    #Make a move , save it in the log
     def make_Move(self,move):
             
         self.board[move.st_row ][move.st_col]= "em"
@@ -95,6 +101,8 @@ class GameState():
             self.to_Move='b'
         else:
             self.to_Move='w'
+        
+    #UNDO MOVES from the move log
     def undo_Move(self):
         if len(self.log) != 0:
             move=self.log[len(self.log)-1]
@@ -107,7 +115,7 @@ class GameState():
                 self.to_Move='b'
             else:
                 self.to_Move='w'
-    
+#Get all POSSIBLE moves   
     def getAllMoves(self):
         moves=[]
         rs=[6,1]
@@ -134,7 +142,7 @@ class GameState():
         #print(moves)
         return moves
     
-    
+#These Genereate all POSSIBLE moves for respective pieces   
     def getPawnMoves(self,r,c,moves,piece):
         
         k=1
