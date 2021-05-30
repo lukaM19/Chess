@@ -1,7 +1,7 @@
 import re
 start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 ##test_fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
-test_fen="rnbqkbnr/pppppppp/8/8/8/p1p5/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
 def to_piece(ch):
     return {
         'r':"bR",
@@ -111,7 +111,7 @@ class GameState():
     def getAllMoves(self):
         moves=[]
         rs=[6,1]
-        print(self.to_Move)
+       #print(self.to_Move)
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 
@@ -123,7 +123,15 @@ class GameState():
                         moves=self.getPawnMoves(r,c,moves,temp)
                     if piece =='n':
                         moves=self.getKnightMoves(r,c,moves,temp)
-        print(moves)
+                    if piece =='k':
+                        moves=self.getKingMoves(r,c,moves,temp)
+                    if piece =='q':
+                        moves=self.getQueenMoves(r,c,moves,temp)
+                    if piece =='b':
+                        moves=self.getBishopMoves(r,c,moves,temp)
+                    if piece =='r':
+                        moves=self.getRookMoves(r,c,moves,temp)       
+        #print(moves)
         return moves
     
     
@@ -145,7 +153,7 @@ class GameState():
                     if(self.board[r+k*1][c+i]!="em" and self.board[r+k*1][c+i][0] != same):
                         move=Move(((r,c),(r+k*1,c+i)),self.board)
                         movenot=Move.inNotation(move)
-                        
+                        print(movenot)
                         moves.append(movenot)
                 else:
                     if(self.board[r+k*1][c+i]=="em"):
@@ -153,11 +161,10 @@ class GameState():
                         movenot=Move.inNotation(move)
                         
                         moves.append(movenot)
-        if(r==1 or r==6):                
+        if((r==1 and same=='b') or (r==6 and same=='w')):                
             if(self.board[r+k*2][c]=="em"):
                 move=Move(((r,c),(r+k*2,c)),self.board)
                 movenot=Move.inNotation(move)
-                
                 moves.append(movenot)
         return moves
     def getKnightMoves(self,r,c,moves,piece):
@@ -165,7 +172,6 @@ class GameState():
         possibilities=[(r+2,c+1),(r+2,c-1),(r-2,c+1),(r-2,c-1),(r-1,c+2),(r+1,c+2),(r+1,c-2),(r-1,c-2)]  
         pval=[p for p in possibilities if p[0]<=7 and p[1]<=7 and p[0]>=0 and p[1]>=0 ]
         for p in pval:
-            print(p)
             if self.board[p[0]][p[1]]=="em" or self.board[p[0]][p[1]][0] != same:
               move=Move(((r,c),(p[0],p[1])),self.board)
               movenot=Move.inNotation(move)
@@ -173,8 +179,261 @@ class GameState():
         return moves
     def getKingMoves(self,r,c,moves,piece):
         same=piece[0]
-        pass
-
-
+        possibilities=[(r+1,c),(r+1,c+1),(r+1,c-1),(r,c-1),(r,c+1),(r-1,c+1),(r-1,c-1),(r-1,c)]
+        pval=[p for p in possibilities if p[0]<=7 and p[1]<=7 and p[0]>=0 and p[1]>=0 ]
+        for p in pval:
+            if self.board[p[0]][p[1]]=="em" or self.board[p[0]][p[1]][0] != same:
+              move=Move(((r,c),(p[0],p[1])),self.board)
+              movenot=Move.inNotation(move)
+              moves.append(movenot)  
+        return moves
+    def getQueenMoves(self,r,c,moves,piece):
+        same=piece[0]
         
-        
+        #VerticalDown
+        for i,row in enumerate(range(r+1,8)):
+            if self.board[row][c] =="em":
+               move=Move(((r,c),(row,c)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               v_max=i 
+            if self.board[row][c][0] == same:
+               break
+            if self.board[row][c][0] != same and self.board[row][c] !="em":
+               move=Move(((r,c),(row,c)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               v_max=i 
+               break
+        #VerticalUp
+        for i,row in enumerate(range(r-1,-1,-1)):
+            if self.board[row][c] =="em":
+               move=Move(((r,c),(row,c)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               v_min=i 
+            if self.board[row][c][0] == same:
+               break
+            if self.board[row][c][0] != same and  self.board[row][c] !="em":
+               move=Move(((r,c),(row,c)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               v_min=i 
+               break
+        #HorizontalRight
+        for i,col in enumerate(range(c+1,8)):
+            if self.board[r][col] =="em":
+               move=Move(((r,c),(r,col)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               v_min=i 
+            if self.board[r][col][0] == same:
+               break
+            if self.board[r][col][0] != same and self.board[r][col] !="em" :
+               move=Move(((r,c),(r,col)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               v_min=i 
+               break
+        #HorizontalLeft
+        for i,col in enumerate(range(c-1,-1,-1)):
+            if self.board[r][col] =="em":
+               move=Move(((r,c),(r,col)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               h_max=i 
+            if self.board[r][col][0] == same:
+               break
+            if self.board[r][col][0] != same and self.board[r][col] !="em":
+               move=Move(((r,c),(r,col)),self.board)
+               movenot=Move.inNotation(move)
+               moves.append(movenot)
+               h_min=i 
+               break
+        #Diagonal^->
+        for i in range(1,8):
+            if (r-i)>=0 and (c+i)<=7:
+                if self.board[r-i][c+i] =="em":
+                    move=Move(((r,c),(r-i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot)
+                if self.board[r-i][c+i][0] == same:
+                    break
+                if self.board[r-i][c+i][0] != same and self.board[r-i][c+i] !="em":
+                    move=Move(((r,c),(r-i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot)
+                    break
+        #Diagonal<-^
+        for i in range(1,8):
+            if (r-i)>=0 and (c-i)>=0:
+                if self.board[r-i][c-i] =="em":
+                    move=Move(((r,c),(r-i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                if self.board[r-i][c-i][0] == same:
+                    break
+                if self.board[r-i][c-i][0] != same and self.board[r-i][c-i] !="em":
+                    move=Move(((r,c),(r-i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                    break
+        #Diagonal<-v
+        for i in range(1,8):
+            if (r+i)<=7 and (c-i)>=0:
+                if self.board[r+i][c-i] =="em":
+                    move=Move(((r,c),(r+i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot)
+                    
+                if self.board[r+i][c-i][0] == same:
+                    break
+                if self.board[r+i][c-i][0] != same and self.board[r+i][c-i] !="em":
+                    
+                    move=Move(((r,c),(r+i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                    
+                    break
+        #Diagonalv->
+        for i in range(1,8):
+            if (r+i)<=7 and (c+i)<=7:
+                if self.board[r+i][c+i] =="em":
+                    move=Move(((r,c),(r+i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                if self.board[r+i][c+i][0] == same:
+                    break
+                if self.board[r+i][c+i][0] != same and self.board[r+i][c+i] !="em":
+                    move=Move(((r,c),(r+i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                    break
+        return moves
+    def getRookMoves(self,r,c,moves,piece):
+        same=piece[0]
+        #VerticalDown
+        for i,row in enumerate(range(r+1,8)):
+            if self.board[row][c] =="em":
+                move=Move(((r,c),(row,c)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                v_max=i 
+            if self.board[row][c][0] == same:
+                break
+            if self.board[row][c][0] != same and self.board[row][c] !="em":
+                move=Move(((r,c),(row,c)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                v_max=i 
+                break
+        #VerticalUp
+        for i,row in enumerate(range(r-1,-1,-1)):
+            if self.board[row][c] =="em":
+                move=Move(((r,c),(row,c)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                v_min=i 
+            if self.board[row][c][0] == same:
+                break
+            if self.board[row][c][0] != same and  self.board[row][c] !="em":
+                move=Move(((r,c),(row,c)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                v_min=i 
+                break
+        #HorizontalRight
+        for i,col in enumerate(range(c+1,8)):
+            if self.board[r][col] =="em":
+                move=Move(((r,c),(r,col)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                v_min=i 
+            if self.board[r][col][0] == same:
+                break
+            if self.board[r][col][0] != same and self.board[r][col] !="em" :
+                move=Move(((r,c),(r,col)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                v_min=i 
+                break
+        #HorizontalLeft
+        for i,col in enumerate(range(c-1,-1,-1)):
+            if self.board[r][col] =="em":
+                move=Move(((r,c),(r,col)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                h_max=i 
+            if self.board[r][col][0] == same:
+                break
+            if self.board[r][col][0] != same and self.board[r][col] !="em":
+                move=Move(((r,c),(r,col)),self.board)
+                movenot=Move.inNotation(move)
+                moves.append(movenot)
+                h_min=i 
+                break
+        return moves
+    def getBishopMoves(self,r,c,moves,piece):
+        same=piece[0]
+        #Diagonal^->
+        for i in range(1,8):
+            if (r-i)>=0 and (c+i)<=7:
+                if self.board[r-i][c+i] =="em":
+                    move=Move(((r,c),(r-i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot)
+                if self.board[r-i][c+i][0] == same:
+                    break
+                if self.board[r-i][c+i][0] != same and self.board[r-i][c+i] !="em":
+                    move=Move(((r,c),(r-i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot)
+                    break
+        #Diagonal<-^
+        for i in range(1,8):
+            if (r-i)>=0 and (c-i)>=0:
+                if self.board[r-i][c-i] =="em":
+                    move=Move(((r,c),(r-i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                if self.board[r-i][c-i][0] == same:
+                    break
+                if self.board[r-i][c-i][0] != same and self.board[r-i][c-i] !="em":
+                    move=Move(((r,c),(r-i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                    break
+        #Diagonal<-v
+        for i in range(1,8):
+            if (r+i)<=7 and (c-i)>=0:
+                if self.board[r+i][c-i] =="em":
+                    move=Move(((r,c),(r+i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot)
+                    
+                if self.board[r+i][c-i][0] == same:
+                    break
+                if self.board[r+i][c-i][0] != same and self.board[r+i][c-i] !="em":
+                    
+                    move=Move(((r,c),(r+i,c-i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                    
+                    break
+        #Diagonalv->
+        for i in range(1,8):
+            if (r+i)<=7 and (c+i)<=7:
+                if self.board[r+i][c+i] =="em":
+                    move=Move(((r,c),(r+i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                if self.board[r+i][c+i][0] == same:
+                    break
+                if self.board[r+i][c+i][0] != same and self.board[r+i][c+i] !="em":
+                    move=Move(((r,c),(r+i,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
+                    break
+        return moves
+
+       
