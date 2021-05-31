@@ -102,7 +102,7 @@ def mainGame(START_POS,SHOW_MOVES):
                         
             #Mouse button is let go           
             if e.type == pg.MOUSEBUTTONUP and hold:
-                if mx>20 and my<720:  
+                if mx>20 and my<=720:  
                     row=(my)//SQ
                     col=(mx-edge_pix)//SQ    
                     if selected == (row,col):
@@ -149,7 +149,7 @@ def mainGame(START_POS,SHOW_MOVES):
                 pos=pg.mouse.get_pos()
                 
         #Highlight last square from and to which  the move was made, Bound set to avoid the bug of pieces showing up on the side of the board
-        if hold  and (mx>45 and my<680):
+        if hold  and (mx>30 and my<720):
             highB= True
         #UPDATE Valid moves for new board position after a move was amde
         if move_made and mark_d<mark_md:
@@ -197,7 +197,7 @@ def mainGame(START_POS,SHOW_MOVES):
         if out:
             font_c = pg.font.Font('freesansbold.ttf', 10)
             txt=gs.Board2Fen()
-            txt_t=font.render(txt, True, 'black')
+            txt_t=font_c.render(txt, True, 'black')
             out_w=txt_t.get_width()+5
             outRect = txt_t.get_rect()
             outRect.center = (WIDTH//4+givet.get_width()//2 + out_w//2 ,HEIGHT+25)
@@ -209,9 +209,14 @@ def mainGame(START_POS,SHOW_MOVES):
         pg.display.flip()
     print('time taken:',start-end)
 
+
+
 #Function for Drawing all parts of the game: Board, Pieces, Highlights    
 def drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES):
-    screen.fill(pg.Color("white"))
+    if gs.to_Move == 'w':
+        screen.fill(pg.Color("white"))
+    else:
+        screen.fill(pg.Color((82,88,84)))
     drawBoard(screen)
     drawPieces(screen,gs.board)
     drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,gs.board,selected,cir,SHOW_MOVES)
@@ -273,7 +278,9 @@ def main_Menu():
     ST_INPUT = False
     START_POS=""
     SHOW_MOVES = False
+    click= False
     while LAUNCH == True:
+        
         #INITIALIZE the display
         pg.display.set_caption('MAIN MENU')
         settings_sc =  pg.display.set_mode((WIDTH+20,HEIGHT+20+20))
