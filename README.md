@@ -18,10 +18,11 @@ Chess engine project
  > - [ ] probably will need to set depth from menu in future
 
 * Game Rules
-> - [x] Pawn,Rook,Knight,Bishop,King,Queen Move Rules added, Can generate all possible moves for the position
-> - [ ] pawn promotion, castling(&undo), enpassant(& undo)
-> - [ ] Checks, Checkmate
-> - [ ] Pinned pieces, discovered checks
+>1. - [x] Pawn,Rook,Knight,Bishop,King,Queen Move Rules added, Can generate all possible moves for the position
+>2. - [ ] pawn promotion, <s>castling(&undo)</s>, enpassant(& undo)
+>    * - [x] Castling and undo 
+>3. - [ ] Checks, Checkmate
+>4. - [ ] Pinned pieces, discovered checks
 
 ## To-Do
 * Position Evaluation&nbsp;\\
