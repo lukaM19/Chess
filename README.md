@@ -19,8 +19,9 @@ Chess engine project
 
 * Game Rules
 >1. - [x] Pawn,Rook,Knight,Bishop,King,Queen Move Rules added, Can generate all possible moves for the position
->2. - [ ] pawn promotion, <s>castling(&undo)</s>, enpassant(& undo)
+>2. - [ ] <s>pawn promotion, castling(&undo)</s>, enpassant(& undo)
 >    * - [x] Castling and undo 
+>    * - [x] Pawn promotion and undo     
 >3. - [ ] Checks, Checkmate
 >4. - [ ] Pinned pieces, discovered checks
 
