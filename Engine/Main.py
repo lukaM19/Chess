@@ -68,7 +68,8 @@ def mainGame(START_POS,SHOW_MOVES):
     counter=0
     mark_d=0
     mark_md=0
-
+    promotion_Move_w= False
+    promotion_Move_b = False
     #While game instance is open
     while running:
         counter+=1
@@ -131,6 +132,12 @@ def mainGame(START_POS,SHOW_MOVES):
                                 gs.make_Move(move)
                                 pg.mixer.Sound.play(move_sound)
                                 pg.mixer.music.stop()
+                                if move.piece_moved[1] == "P":
+                                    ##Check if promotion move
+                                    if move.piece_moved[0] == 'w' and move.end_row==0:
+                                        promotion_Move_w= True
+                                    if move.piece_moved[0] == 'b' and move.end_row==7:
+                                        promotion_Move_b= True
                                 last_move=sel_list
                                 move_made=True
                                 selected=()
@@ -155,11 +162,89 @@ def mainGame(START_POS,SHOW_MOVES):
         if move_made and mark_d<mark_md:
             validmoves=gs.getAllMoves()  
             mark_d=counter
-              
+
+        
+            
         #update the display   
         drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES)
         highB = False
-        
+        #Handle pawn promotion
+        if promotion_Move_w:
+            gs.to_Move='w'
+            Rt = font.render("R", True, 'pink')
+            RtRect = Rt.get_rect()
+            RtRect.center = (10,20)
+            screen.blit(Rt, RtRect)
+            if RtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="wR"
+                    promotion_Move_w=False
+                    gs.to_Move='b'
+            Nt = font.render("N", True, 'pink')
+            NtRect = Nt.get_rect()
+            NtRect.center = (10,40)
+            screen.blit(Nt, NtRect)
+            if NtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="wN"
+                    promotion_Move_w=False
+                    gs.to_Move='b'
+            Bt = font.render("B", True, 'pink')
+            BtRect = Bt.get_rect()
+            BtRect.center = (10,60)
+            screen.blit(Bt, BtRect)
+            if BtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="wB"
+                    promotion_Move_w=False
+                    gs.to_Move='b'
+            Qt = font.render("Q", True, 'pink')
+            QtRect = Qt.get_rect()
+            QtRect.center = (10,80)
+            screen.blit(Qt, QtRect)
+            if QtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="wQ"
+                    promotion_Move_w=False
+                    gs.to_Move='b'
+        if promotion_Move_b:
+            gs.to_Move='b'
+            Rt = font.render("R", True, 'pink')
+            RtRect = Rt.get_rect()
+            RtRect.center = (10,20)
+            screen.blit(Rt, RtRect)
+            if RtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="bR"
+                    promotion_Move_b=False
+                    gs.to_Move='w'
+            Nt = font.render("N", True, 'pink')
+            NtRect = Nt.get_rect()
+            NtRect.center = (10,40)
+            screen.blit(Nt, NtRect)
+            if NtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="bN"
+                    promotion_Move_b=False
+                    gs.to_Move='w'
+            Bt = font.render("B", True, 'pink')
+            BtRect = Bt.get_rect()
+            BtRect.center = (10,60)
+            screen.blit(Bt, BtRect)
+            if BtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="bB"
+                    promotion_Move_b=False
+                    gs.to_Move='w'
+            Qt = font.render("Q", True, 'pink')
+            QtRect = Qt.get_rect()
+            QtRect.center = (10,80)
+            screen.blit(Qt, QtRect)
+            if QtRect.collidepoint((mx,my)) :
+                if click:
+                    gs.board[move.end_row][move.end_col]="bQ"
+                    promotion_Move_b=False
+                    gs.to_Move='w'
         end=time.time()
 
         #Quit Button and interaction on Click

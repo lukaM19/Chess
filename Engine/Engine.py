@@ -231,13 +231,13 @@ class GameState():
                 self.board[move.st_row ][move.st_col]=move.piece_moved
                 self.board[move.end_row ][move.end_col]=move.piece_cap
             
-            if move.st_row == 7 and move.st_col == 7 and move.piece_moved == "wR" and "K" not in self.castling:
+            if move.st_row == 7 and move.st_col == 7 and move.piece_moved == "wR" and "K" not in self.castling and self.cK:
                 self.castling  = "K"+self.castling
-            if move.st_row == 7 and move.st_col == 0 and move.piece_moved == "wR" and "Q" not in self.castling:   
+            if move.st_row == 7 and move.st_col == 0 and move.piece_moved == "wR" and "Q" not in self.castling and self.ck:   
                 self.castling  =self.castling+"Q"  
-            if move.st_row == 0 and move.st_col == 7 and move.piece_moved == "bR" and "k" not in self.castling:
+            if move.st_row == 0 and move.st_col == 7 and move.piece_moved == "bR" and "k" not in self.castling and self.cQ:
                 self.castling  = "k"+self.castling
-            if move.st_row == 0 and move.st_col == 0 and move.piece_moved == "bR" and "q" not in self.castling:   
+            if move.st_row == 0 and move.st_col == 0 and move.piece_moved == "bR" and "q" not in self.castling and self.cq:   
                 self.castling  =self.castling+"q"
             
                     
