@@ -68,6 +68,7 @@ def mainGame(START_POS,SHOW_MOVES):
     counter=0
     mark_d=0
     mark_md=0
+    #Promotion handlers
     promotion_Move_w= False
     promotion_Move_b = False
     #While game instance is open
@@ -166,6 +167,7 @@ def mainGame(START_POS,SHOW_MOVES):
         
             
         #update the display   
+        print(gs.en_Pc)
         drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES)
         highB = False
         #Handle pawn promotion

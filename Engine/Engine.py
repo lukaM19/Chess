@@ -87,6 +87,7 @@ class Move():
 
 #Main Class for the Game board making moves etc
 class GameState():
+    backup_en_passant=[]
     N2Piece={'bR':'r','bB':'b','bN':'n','bP':'p','bQ':'q','bK':'k','wR':'R','wB':'B','wN':'N','wP':'P','wQ':'Q','wK':'K'}
     
     def __init__(self,init_fen):
@@ -99,6 +100,9 @@ class GameState():
             self.ck= False
             self.cQ= False
             self.cq = False
+            self.en_Pc = 0
+            self.move_N = 0
+            self.enPcl =[]
         if "K" in self.castling:
             self.cK= True
         if "k" in self.castling:
@@ -111,6 +115,11 @@ class GameState():
             
     #Make a move , save it in the log
     def make_Move(self,move):
+        self.move_N+=1
+       
+        self.backup_en_passant.append(self.en_Passant)
+        self.en_Passant=""
+        #if rook move disable corresponding castle
         if move.piece_moved[1] =='R':
             kq=""
             c_r=0
@@ -124,8 +133,8 @@ class GameState():
                 self.castling= self.castling.replace(kq[0],"")
             if kq[1] in self.castling and move.st_row == c_r and move.st_col == 0:
                 self.castling= self.castling.replace(kq[1],"")
-                
-        if move.piece_moved[1] =='K':
+        #if King Move disable castle, or do castle move       
+        elif move.piece_moved[1] =='K':
             
             kq="KQ"
             rook=""
@@ -164,15 +173,36 @@ class GameState():
             rook="bR"
             row=0
             n_m='w'
+        #do en passant moves
+        elif  (move.piece_moved =='wP' and move.end_row==2 and self.board[move.end_row+1 ][move.end_col]== "bP") or(move.piece_moved == "bP" and move.end_row==5 and self.board[move.end_row-1 ][move.end_col]== "wP"): 
             
+            if move.piece_moved == "wP" :
+               
+               self.board[move.st_row ][move.st_col]= "em"
+               self.board[move.end_row ][move.end_col]= move.piece_moved
+               self.board[move.end_row+1 ][move.end_col]="em"
+               self.log.append(move) 
+            if move.piece_moved == "bP":
+               self.board[move.st_row ][move.st_col]= "em"
+               self.board[move.end_row ][move.end_col]= move.piece_moved
+               self.board[move.end_row-1 ][move.end_col]="em"
+               self.log.append(move) 
+            self.en_Pc+=1
+            
+            self.enPcl .append(self.move_N)
+        #Regular moves      
         else:
             self.board[move.st_row ][move.st_col]= "em"
             self.board[move.end_row ][move.end_col]= move.piece_moved
             self.log.append(move)
-            if self.to_Move == 'w':
-                self.to_Move='b'
-            else:
-                self.to_Move='w'
+        #Record POSSIBLE en passants   
+        if (move.piece_moved == "wP" and move.st_row == 6 and move.end_row==4) or (move.piece_moved == "bP" and move.st_row == 1 and move.end_row==3) :
+            
+            self.en_Passant+=(Move.Num2LETR[move.end_col+1]+str((8-move.end_row)))
+        if self.to_Move == 'w':
+            self.to_Move='b'
+        else:
+            self.to_Move='w'
         
     #UNDO MOVES from the move log
     def undo_Move(self):
@@ -226,7 +256,21 @@ class GameState():
                             self.castling=strs[1]+self.castling
                         if self.cQ:
                             self.castling=strs[0]+self.castling
-            #UNDO REGULAR MOVES    
+            #UNDO En-Passant
+            if self.en_Pc>0 and self.move_N == self.enPcl[len(self.enPcl)-1]:
+                st="w"
+                k=-1
+                if move.piece_moved[0]=='w':
+                    st="b"
+                    k=1
+                
+                self.board[move.st_row ][move.st_col]=move.piece_moved
+                self.board[move.end_row ][move.end_col]=move.piece_cap
+                self.board[move.end_row+k ][move.end_col]=st+"P"
+                self.en_Pc+=-1
+                self.enPcl.pop()
+                #self.en_Passant+=(Move.Num2LETR[move.end_col+1]+str((8-move.end_row-k)))
+            #UNDO REGULAR MOVES and  Pawn Promotion   
             else:
                 self.board[move.st_row ][move.st_col]=move.piece_moved
                 self.board[move.end_row ][move.end_col]=move.piece_cap
@@ -240,11 +284,12 @@ class GameState():
             if move.st_row == 0 and move.st_col == 0 and move.piece_moved == "bR" and "q" not in self.castling and self.cq:   
                 self.castling  =self.castling+"q"
             
-                    
+            self.en_Passant=self.backup_en_passant.pop()       
             if self.to_Move == 'w':
                 self.to_Move='b'
             else:
                 self.to_Move='w'
+            self.move_N+=-1
 #Get all POSSIBLE moves   
     def getAllMoves(self):
         moves=[]
@@ -302,6 +347,21 @@ class GameState():
                 move=Move(((r,c),(r+k*2,c)),self.board)
                 movenot=Move.inNotation(move)
                 moves.append(movenot)
+                
+        enp=[-1,1]
+        inx=-1
+        for i in enp:
+            if same == 'b':
+                inx=1
+            if (c+i)<8 and (c+i)>=0 :
+                
+                if  (Move.Num2LETR[c+i+1]+str(8-r)) in self.en_Passant:
+                    print("True")
+                    print((Move.Num2LETR[c+i+1]+str(8-r)))
+                    print(self.en_Passant)
+                    move=Move(((r,c),(r+inx,c+i)),self.board)
+                    movenot=Move.inNotation(move)
+                    moves.append(movenot) 
         return moves
     def getKnightMoves(self,r,c,moves,piece):
         same=piece[0]
@@ -607,10 +667,12 @@ class GameState():
         FEN+=" "
         FEN+=self.to_Move
         FEN+=" "
+        if self.castling=="":
+            self.castling="-"
         FEN+=self.castling
         FEN+=" "
         for v in self.en_Passant:
-            FEN+=v
+            FEN+=v.lower()
         FEN+=" "
         FEN+=str(self.n_Hmove)
         FEN+=" "
