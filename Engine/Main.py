@@ -25,7 +25,7 @@ def loadPieces():
 
 #Main Game Process
 def mainGame(START_POS,SHOW_MOVES):
-    
+    Ai_Turn =False
     #Draw Game Window
     pg.display.set_caption('Play Game')
     start=time.time()
@@ -74,100 +74,108 @@ def mainGame(START_POS,SHOW_MOVES):
     #While game instance is open
     while running:
         counter+=1
+        #if gs.to_Move=='b':
+           # Ai_Turn = True
         #mouse co-ordiantes on board
         mx,my = pg.mouse.get_pos()
         click = False
+        if Ai_Turn:
+            #gs.ai_Make_Move()
+            #validmoves=gs.getAllMoves()
+            #Ai_Turn= False
+            pass
+        else:
         #Main Event loop
-        for e in pg.event.get():
-            if e.type == pg.QUIT:          
-                running=False
-            #Mouse button is pressed
-            if e.type == pg.MOUSEBUTTONDOWN:
-                if e.button == 1:
-                    click = True
-                    hold=False
-                #Mouse button is pressed inside the loop
-                if mx>20 and my<720:
-                    
-                    row=(my)//SQ
-                    col=(mx-edge_pix)//SQ
-                    if gs.board[row][col] != "em":
-                        selected = (row,col)
-                        hold=True
-                        sel_list.append(selected)
-                        cur=gs.board[row][col]
-                        t=IMAGES[cur]
-                        tr=t.get_rect()
-                        h_loc=(row,col)
-                        
-                        
-                        
-            #Mouse button is let go           
-            if e.type == pg.MOUSEBUTTONUP and hold:
-                if mx>20 and my<=720:  
-                    row=(my)//SQ
-                    col=(mx-edge_pix)//SQ    
-                    if selected == (row,col):
-                        selected=()
-                        sel_list=[]
+            for e in pg.event.get():
+                if e.type == pg.QUIT:          
+                    running=False
+                #Mouse button is pressed
+                if e.type == pg.MOUSEBUTTONDOWN:
+                    if e.button == 1:
+                        click = True
                         hold=False
-                    else:
-                        selected = (row,col)
-                        sel_list.append(selected)
-                    
-
-                    #if 2 Squares have been selected for a move
-                    if len(sel_list)==2 :
-                        hold=False
-                        #if staring square is empty or not your turn to move, reset move selection
-                        if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") or gs.to_Move != COLOR[gs.board[sel_list[0][0]][sel_list[0][1]]]:
+                    #Mouse button is pressed inside the loop
+                    if mx>20 and my<720:
+                        
+                        row=(my)//SQ
+                        col=(mx-edge_pix)//SQ
+                        if gs.board[row][col] != "em":
+                            selected = (row,col)
+                            hold=True
+                            sel_list.append(selected)
+                            cur=gs.board[row][col]
+                            t=IMAGES[cur]
+                            tr=t.get_rect()
+                            h_loc=(row,col)
+                            
+                            
+                            
+                #Mouse button is let go           
+                if e.type == pg.MOUSEBUTTONUP and hold:
+                    if mx>20 and my<=720:  
+                        row=(my)//SQ
+                        col=(mx-edge_pix)//SQ    
+                        if selected == (row,col):
                             selected=()
                             sel_list=[]
+                            hold=False
                         else:
-                            
-                            move=Engine.Move(sel_list,gs.board)
-                            #print(Engine.Move.inNotation(move))
-                            rn=Engine.Move.inNotation(move)
-                            #Make move if Valid
-                            if(rn in validmoves):
-                                gs.make_Move(move)
-                                pg.mixer.Sound.play(move_sound)
-                                pg.mixer.music.stop()
-                                if move.piece_moved[1] == "P":
-                                    ##Check if promotion move
-                                    if move.piece_moved[0] == 'w' and move.end_row==0:
-                                        promotion_Move_w= True
-                                    if move.piece_moved[0] == 'b' and move.end_row==7:
-                                        promotion_Move_b= True
-                                last_move=sel_list
-                                move_made=True
+                            selected = (row,col)
+                            sel_list.append(selected)
+                        
+
+                        #if 2 Squares have been selected for a move
+                        if len(sel_list)==2 :
+                            hold=False
+                            #if staring square is empty or not your turn to move, reset move selection
+                            if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") or gs.to_Move != COLOR[gs.board[sel_list[0][0]][sel_list[0][1]]]:
                                 selected=()
                                 sel_list=[]
-                                mark_md=counter
                             else:
-                                selected=()
-                                sel_list=[]
-                else:
-                    hold = False
-                    selected=()
-                    sel_list=[]
+                                
+                                move=Engine.Move(sel_list,gs.board)
+                                #print(Engine.Move.inNotation(move))
+                                rn=Engine.Move.inNotation(move)
+                                #Make move if Valid
+                                if(rn in validmoves):
+                                    gs.make_Move(move)
+                                    pg.mixer.Sound.play(move_sound)
+                                    pg.mixer.music.stop()
+                                    if move.piece_moved[1] == "P":
+                                        ##Check if promotion move
+                                        if move.piece_moved[0] == 'w' and move.end_row==0:
+                                            promotion_Move_w= True
+                                        if move.piece_moved[0] == 'b' and move.end_row==7:
+                                            promotion_Move_b= True
+                                    last_move=sel_list
+                                    move_made=True
+                                    selected=()
+                                    sel_list=[]
+                                    mark_md=counter
+                                else:
+                                    selected=()
+                                    sel_list=[]
+                    else:
+                        hold = False
+                        selected=()
+                        sel_list=[]
 
-            #Drag animation
-            if e.type == pg.MOUSEMOTION:
-                pos=pg.mouse.get_pos()
-                
-        #Highlight last square from and to which  the move was made, Bound set to avoid the bug of pieces showing up on the side of the board
-        if hold  and (mx>30 and my<720):
-            highB= True
-        #UPDATE Valid moves for new board position after a move was amde
-        if move_made and mark_d<mark_md:
-            validmoves=gs.getAllMoves()  
-            mark_d=counter
+                #Drag animation
+                if e.type == pg.MOUSEMOTION:
+                    pos=pg.mouse.get_pos()
+                    
+            #Highlight last square from and to which  the move was made, Bound set to avoid the bug of pieces showing up on the side of the board
+            if hold  and (mx>30 and my<720):
+                highB= True
+            #UPDATE Valid moves for new board position after a move was amde
+            if move_made and mark_d<mark_md:
+                validmoves=gs.getAllMoves()  
+                mark_d=counter
 
-        
             
-        #update the display   
-        print(gs.en_Pc)
+              
+            #update the display   
+        
         drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES)
         highB = False
         #Handle pawn promotion
@@ -259,7 +267,8 @@ def mainGame(START_POS,SHOW_MOVES):
             
                 main_Menu()
 
-        #UNDO button and interaction on Click        
+        #UNDO button and interaction on Click   
+             
         undot = font.render("Undo", True, 'pink')
         undoRect = undot.get_rect()
         undoRect.center = (SQ-70,HEIGHT+30)
@@ -269,6 +278,7 @@ def mainGame(START_POS,SHOW_MOVES):
                 
                 move=Engine.Move(last_move,gs.board)
                 gs.undo_Move()
+                #gs.undo_Move()
                 pg.mixer.Sound.play(move_sound)
                 pg.mixer.music.stop()
                 validmoves=gs.getAllMoves()  

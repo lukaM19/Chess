@@ -1,4 +1,5 @@
 import re
+import random
 start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 ##test_fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
 ##test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
@@ -112,7 +113,12 @@ class GameState():
         if "q" in self.castling:
             self.cq= True
             
-            
+    def ai_Make_Move(self):
+        test=random.randint(0,len(self.moves)-1)
+        t=self.moves[test]
+        ai_move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),self.board)
+        self.make_Move(ai_move)
+        pass        
     #Make a move , save it in the log
     def make_Move(self,move):
         self.move_N+=1
@@ -143,12 +149,12 @@ class GameState():
                 
                 rook="wR"
                 row=7
-                n_m='b'
+               
             else:
                 rook="bR"
                 row=0
                 kq=kq.lower()
-                n_m='w'
+                
             if kq[0] in self.castling and move.end_row== row and move.end_col==6: 
                 self.board[move.st_row ][move.st_col]= "em"
                 self.board[move.st_row ][move.end_col+1]= "em"
@@ -166,13 +172,11 @@ class GameState():
                 self.board[move.end_row ][move.end_col]= move.piece_moved
                 self.log.append(move)
             
-            self.to_Move=n_m
+            
             self.castling= self.castling.replace(kq[1],"")
             self.castling= self.castling.replace(kq[0],"")
             
-            rook="bR"
-            row=0
-            n_m='w'
+            
         #do en passant moves
         elif  (move.piece_moved =='wP' and move.end_row==2 and self.board[move.end_row+1 ][move.end_col]== "bP") or(move.piece_moved == "bP" and move.end_row==5 and self.board[move.end_row-1 ][move.end_col]== "wP"): 
             
@@ -292,7 +296,7 @@ class GameState():
             self.move_N+=-1
 #Get all POSSIBLE moves   
     def getAllMoves(self):
-        moves=[]
+        self.moves=[]
        #print(self.to_Move)
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
@@ -302,19 +306,19 @@ class GameState():
                 piece=temp[1].lower()
                 if color== self.to_Move:
                     if piece =='p':
-                        moves=self.getPawnMoves(r,c,moves,temp)
+                        self.moves=self.getPawnMoves(r,c,self.moves,temp)
                     if piece =='n':
-                        moves=self.getKnightMoves(r,c,moves,temp)
+                        self.moves=self.getKnightMoves(r,c,self.moves,temp)
                     if piece =='k':
-                        moves=self.getKingMoves(r,c,moves,temp)
+                        self.moves=self.getKingMoves(r,c,self.moves,temp)
                     if piece =='q':
-                        moves=self.getQueenMoves(r,c,moves,temp)
+                        self.moves=self.getQueenMoves(r,c,self.moves,temp)
                     if piece =='b':
-                        moves=self.getBishopMoves(r,c,moves,temp)
+                        self.moves=self.getBishopMoves(r,c,self.moves,temp)
                     if piece =='r':
-                        moves=self.getRookMoves(r,c,moves,temp)       
+                        self.moves=self.getRookMoves(r,c,self.moves,temp)       
         #print(moves)
-        return moves
+        return self.moves
     
 #These Genereate all POSSIBLE moves for respective pieces   
     def getPawnMoves(self,r,c,moves,piece):
@@ -373,36 +377,7 @@ class GameState():
               movenot=Move.inNotation(move)
               moves.append(movenot)  
         return moves
-    def getKingMoves(self,r,c,moves,piece):
-        same=piece[0]
-        possibilities=[(r+1,c),(r+1,c+1),(r+1,c-1),(r,c-1),(r,c+1),(r-1,c+1),(r-1,c-1),(r-1,c)]
-        pval=[p for p in possibilities if p[0]<=7 and p[1]<=7 and p[0]>=0 and p[1]>=0 ]
-        for p in pval:
-            if self.board[p[0]][p[1]]=="em" or self.board[p[0]][p[1]][0] != same:
-              move=Move(((r,c),(p[0],p[1])),self.board)
-              movenot=Move.inNotation(move)
-              moves.append(movenot)  
-        #Castling
-        if same == 'w' and r== 7 and c==4:
-            if "K" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
-              move=Move(((r,c),(r,c+2)),self.board)
-              movenot=Move.inNotation(move)
-              moves.append(movenot)  
-            if "Q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
-              move=Move(((r,c),(r,c-2)),self.board)
-              movenot=Move.inNotation(move)
-              moves.append(movenot)  
-        if same == 'b' and r== 0 and c==4:
-            if "k" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
-              move=Move(((r,c),(r,c+2)),self.board)
-              movenot=Move.inNotation(move)
-              moves.append(movenot)  
-            if "q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
-              move=Move(((r,c),(r,c-2)),self.board)
-              movenot=Move.inNotation(move)
-              moves.append(movenot) 
-
-        return moves
+   
    #Have to "optimize the  if statements"
     def getQueenMoves(self,r,c,moves,piece):
         same=piece[0]
@@ -643,7 +618,36 @@ class GameState():
                         moves.append(movenot) 
                     break
         return moves
+    def getKingMoves(self,r,c,moves,piece):
+        same=piece[0]
+        possibilities=[(r+1,c),(r+1,c+1),(r+1,c-1),(r,c-1),(r,c+1),(r-1,c+1),(r-1,c-1),(r-1,c)]
+        pval=[p for p in possibilities if p[0]<=7 and p[1]<=7 and p[0]>=0 and p[1]>=0 ]
+        for p in pval:
+            if self.board[p[0]][p[1]]=="em" or self.board[p[0]][p[1]][0] != same:
+              move=Move(((r,c),(p[0],p[1])),self.board)
+              movenot=Move.inNotation(move)
+              moves.append(movenot)  
+        #Castling
+        if same == 'w' and r== 7 and c==4:
+            if "K" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
+              move=Move(((r,c),(r,c+2)),self.board)
+              movenot=Move.inNotation(move)
+              moves.append(movenot)  
+            if "Q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
+              move=Move(((r,c),(r,c-2)),self.board)
+              movenot=Move.inNotation(move)
+              moves.append(movenot)  
+        if same == 'b' and r== 0 and c==4:
+            if "k" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
+              move=Move(((r,c),(r,c+2)),self.board)
+              movenot=Move.inNotation(move)
+              moves.append(movenot)  
+            if "q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
+              move=Move(((r,c),(r,c-2)),self.board)
+              movenot=Move.inNotation(move)
+              moves.append(movenot) 
 
+        return moves
     def Board2Fen(self):
         N2Piece={'bR':'r','bB':'b','bN':'n','bP':'p','bQ':'q','bK':'k','wR':'R','wB':'B','wN':'N','wP':'P','wQ':'Q','wK':'K'}
         FEN=""
