@@ -2,6 +2,7 @@ import pygame as pg
 import sys
 from Chess import Engine
 import time
+import random
 pg.init()
 
 #Global Variables
@@ -25,7 +26,7 @@ def loadPieces():
 
 #Main Game Process
 def mainGame(START_POS,SHOW_MOVES):
-    Ai_Turn =False
+    
     #Draw Game Window
     pg.display.set_caption('Play Game')
     start=time.time()
@@ -37,7 +38,7 @@ def mainGame(START_POS,SHOW_MOVES):
     #load game position, Pieces and load images for chess pieces, Load Valid moves
     gs = Engine.GameState(START_POS)
     loadPieces()
-    validmoves=gs.getAllMoves()
+    validmoves=gs.getValidMoves()
     
     #variables for making moves, drag animation
     move_sound = pg.mixer.Sound("Chess/move.wav")
@@ -63,7 +64,7 @@ def mainGame(START_POS,SHOW_MOVES):
     high_sur.set_alpha(25)
     move_made= False
     highB=False
-    out = False
+    out = True
     #Helps us make sure we only load valid moves once, after each move has been played
     counter=0
     mark_d=0
@@ -71,19 +72,75 @@ def mainGame(START_POS,SHOW_MOVES):
     #Promotion handlers
     promotion_Move_w= False
     promotion_Move_b = False
+    Ai_Turn = False
+    
+
     #While game instance is open
     while running:
         counter+=1
-        #if gs.to_Move=='b':
-           # Ai_Turn = True
+        if gs.to_Move=='b':
+            Ai_Turn = True
         #mouse co-ordiantes on board
         mx,my = pg.mouse.get_pos()
         click = False
+        
+
+
         if Ai_Turn:
-            #gs.ai_Make_Move()
-            #validmoves=gs.getAllMoves()
-            #Ai_Turn= False
-            pass
+            ntp={0:'B',1:'R',2:'Q',3:'N'}
+            #time.sleep(1)
+            ai_move=gs.ai_Make_Move()
+            if(ai_move == "END"):
+                w="Black"
+                if gs.to_Move == 'b':
+                    w="White"
+                
+                print(w,": Won!")
+                break
+            sl=ai_move.inNotation()[2:]
+            sel_list=((int(sl[0]),int(sl[1])),(int(sl[2]),int(sl[3])))
+            gs.make_Move(ai_move)
+            pg.mixer.Sound.play(move_sound)
+            pg.mixer.music.stop()
+            if ai_move.piece_moved[1] == "P":
+                ##Check if promotion move
+                if ai_move.piece_moved == 'w' and ai_move.end_row==0:
+                    test=random.randint(0,4)
+                    gs.board[int(sl[2])][int(sl[3])]='w'+str(ntp[test])
+                if ai_move.piece_moved[0] == 'b' and ai_move.end_row==7:
+                    
+                    test=random.randint(0,4)
+                    print("test",test,'b'+str(ntp[test]))
+                    gs.board[int(sl[2])][int(sl[3])]='b'+ntp[test]
+            last_move=sel_list
+            move_made=True
+            selected=()
+            sel_list=[]
+            validmoves=gs.getValidMoves()
+            wrn=0
+            brn=0
+            for r in range(8):
+                for c in range(8):
+                    if gs.board[r][c]=="wR":
+                        wrn+=1
+                    if gs.board[r][c]=="bR":
+                        brn+=1
+            if brn>=3 or wrn>=3:
+                logs=[v.inChessNotation() for v in gs.log]
+                print(gs.temp.inChessNotation())
+                print(logs)
+                Ai_Turn = False
+                print(gs.board[0])
+                print(gs.board[1])
+                print(gs.board[2])
+                print(gs.board[3])
+                print(gs.board[4])
+                print(gs.board[5])
+                print(gs.board[6])
+                gs.quit()
+            
+            Ai_Turn= False
+                
         else:
         #Main Event loop
             for e in pg.event.get():
@@ -128,7 +185,7 @@ def mainGame(START_POS,SHOW_MOVES):
                         if len(sel_list)==2 :
                             hold=False
                             #if staring square is empty or not your turn to move, reset move selection
-                            if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") or gs.to_Move != COLOR[gs.board[sel_list[0][0]][sel_list[0][1]]]:
+                            if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") :
                                 selected=()
                                 sel_list=[]
                             else:
@@ -139,6 +196,7 @@ def mainGame(START_POS,SHOW_MOVES):
                                 #Make move if Valid
                                 if(rn in validmoves):
                                     gs.make_Move(move)
+                            
                                     pg.mixer.Sound.play(move_sound)
                                     pg.mixer.music.stop()
                                     if move.piece_moved[1] == "P":
@@ -169,13 +227,12 @@ def mainGame(START_POS,SHOW_MOVES):
                 highB= True
             #UPDATE Valid moves for new board position after a move was amde
             if move_made and mark_d<mark_md:
-                validmoves=gs.getAllMoves()  
+                validmoves=gs.getValidMoves()  
                 mark_d=counter
 
             
               
             #update the display   
-        
         drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES)
         highB = False
         #Handle pawn promotion
@@ -278,10 +335,9 @@ def mainGame(START_POS,SHOW_MOVES):
                 
                 move=Engine.Move(last_move,gs.board)
                 gs.undo_Move()
-                #gs.undo_Move()
                 pg.mixer.Sound.play(move_sound)
                 pg.mixer.music.stop()
-                validmoves=gs.getAllMoves()  
+                validmoves=gs.getValidMoves()  
                 move_made = False
         #Give FEN of given position
         givet = font.render("Export Fen", True, 'pink')
@@ -504,7 +560,7 @@ def main_Menu():
             pg.display.flip()
             clock.tick(60)
         
-        
+       
     
 if __name__ == "__main__":
     main_Menu()
