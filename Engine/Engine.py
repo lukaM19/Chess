@@ -1,5 +1,7 @@
 import re
 import random
+import copy
+import time
 start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 ##test_fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
 ##test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
@@ -45,10 +47,16 @@ def fen_2board(fen):
         en_Passant = re.findall('..',st[3])
     else:
         en_Passant= st[3]
-    #Number of half moves made
-    n_Hmove = int(st[4])
-    #Number of fullmoves made
-    n_Fmove = int(st[5])
+    if len(st)>4:
+        #Number of half moves made
+        n_Hmove = int(st[4])
+        #Number of fullmoves made
+        n_Fmove = int(st[5])
+    else:
+        #Number of half moves made
+        n_Hmove = 0
+        #Number of fullmoves made
+        n_Fmove = 0
 
     return board,to_Move,castling,en_Passant,n_Fmove,n_Hmove
 
@@ -97,13 +105,16 @@ class GameState():
             self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(init_fen)
         else:
             self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(start_Fen)
-            self.cK = False
-            self.ck= False
-            self.cQ= False
-            self.cq = False
-            self.en_Pc = 0
-            self.move_N = 0
-            self.enPcl =[]
+        self.cK = False
+        self.ck= False
+        self.cQ= False
+        self.cq = False
+        self.en_Pc = 0
+        self.move_N = 0
+        self.enPcl =[]
+        self.c=0
+        self.cl_m=[]
+        self.king_pos=()
         if "K" in self.castling:
             self.cK= True
         if "k" in self.castling:
@@ -114,13 +125,19 @@ class GameState():
             self.cq= True
             
     def ai_Make_Move(self):
-        test=random.randint(0,len(self.moves)-1)
-        t=self.moves[test]
-        ai_move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),self.board)
-        self.make_Move(ai_move)
-        pass        
+        ai_move=""
+        if(len(self.valid_Moves)==0 ):
+                return "END"
+        else:
+            test=random.randint(0,len(self.valid_Moves)-1)
+            t=self.valid_Moves[test]
+            ai_move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),self.board)
+        
+        
+        return ai_move     
     #Make a move , save it in the log
     def make_Move(self,move):
+        c_Func={"k":self.ck,"K":self.cK,"q":self.cq,"Q":self.cQ}
         self.move_N+=1
        
         self.backup_en_passant.append(self.en_Passant)
@@ -137,10 +154,39 @@ class GameState():
                 c_r=0
             if kq[0] in self.castling and move.st_row == c_r and move.st_col == 7:
                 self.castling= self.castling.replace(kq[0],"")
+                if kq[0] == "K":
+                     self.cK = False
+                else:
+                    self.ck = False
+                self.cl_m.append(self.move_N)
             if kq[1] in self.castling and move.st_row == c_r and move.st_col == 0:
                 self.castling= self.castling.replace(kq[1],"")
+                if kq[1] == "Q":
+                     self.cQ = False
+                else:
+                    self.cq = False
+                self.cl_m.append(self.move_N)
+        if move.piece_cap[1] == 'R':
+            cr=move.end_row
+            cc = move.end_col
+            if move.piece_moved[0] == "b" and cr ==7 and (cc==7 or cc==0 ) :
+                if self.cK and cc==7:
+                    self.cK = False
+                    self.castling= self.castling.replace("K","")
+                if self.cQ and cc==0:
+                    self.cQ = False
+                    self.castling= self.castling.replace("Q","")
+            if move.piece_moved[0] == "w" and cr ==0 and (cc==7 or cc==0 ) :
+                if self.ck and cc==7:
+                    self.ck = False
+                    self.castling= self.castling.replace("k","")
+                if self.cq and cc==0:
+                    self.cq = False            
+                    self.castling= self.castling.replace("q","")
+            self.cl_m.append(self.move_N)
+            
         #if King Move disable castle, or do castle move       
-        elif move.piece_moved[1] =='K':
+        if move.piece_moved[1] =='K':
             
             kq="KQ"
             rook=""
@@ -155,13 +201,13 @@ class GameState():
                 row=0
                 kq=kq.lower()
                 
-            if kq[0] in self.castling and move.end_row== row and move.end_col==6: 
+            if kq[0] in self.castling and move.end_row== row and move.end_col==6 and self.board[move.st_row ][move.end_col+1] == rook: 
                 self.board[move.st_row ][move.st_col]= "em"
                 self.board[move.st_row ][move.end_col+1]= "em"
                 self.board[move.end_row ][move.end_col-1]= rook
                 self.board[move.end_row ][move.end_col]= move.piece_moved
                 self.log.append(move)
-            elif kq[1] in self.castling and move.end_row== row and move.end_col==2:
+            elif kq[1] in self.castling and move.end_row== row and move.end_col==2 and self.board[move.st_row ][move.end_col-2] == rook:
                 self.board[move.st_row ][move.st_col]= "em"
                 self.board[move.st_row ][move.end_col-2]= "em"
                 self.board[move.end_row ][move.end_col+1]= rook
@@ -206,14 +252,16 @@ class GameState():
         if self.to_Move == 'w':
             self.to_Move='b'
         else:
-            self.to_Move='w'
-        
+            self.to_Move='w'  
     #UNDO MOVES from the move log
     def undo_Move(self):
+        self.c+=1
+        c_Func={"k":self.ck,"K":self.cK,"q":self.cq,"Q":self.cQ}
         if len(self.log) != 0:
             move=self.log.pop()
+            self.temp=move
             #UNDO CASTLING
-            if move.piece_moved[1] == "K":
+            if move.piece_moved[1] == "K" and move.st_col == 4:
                 row=0
                 strs=["K","Q"]
                 k_col=""
@@ -235,31 +283,47 @@ class GameState():
                 k_e_c=0
                 stt=""
                     
-                if move.st_col ==4 and move.end_col == 6:
+                if move.end_col == 6:
                    castle= True 
                    k_e_c=6
                    r_e_c=5
                    r_s_c=7
                    stt=strs[0]
-                if move.st_col ==4 and move.end_col == 2:
+                if move.end_col == 2:
                    castle = True 
                    k_e_c=2
                    r_e_c=3
                    r_s_c=0
                    stt=strs[1]
-                if  castle and move.st_col == 4:
+                if  castle :
                         self.board[row][k_e_c]="em"
                         self.board[row][r_e_c]="em"
                         self.board[row][4]=k_col
                         self.board[row][r_s_c]=r_col
-                        self.castling=strs[0]+strs[1]+self.castling
+                        if strs[0] == "K":
+                            if self.cK:
+                                self.castling=strs[0]+self.castling
+                            if self.cQ:
+                                self.castling=strs[1]+self.castling     
+                        else:
+                            if  self.ck:
+                                self.castling=strs[0]+self.castling
+                            if self.cq:
+                                self.castling=strs[1]+self.castling                            
                 else:
+                        
                         self.board[move.st_row ][move.st_col]=move.piece_moved
                         self.board[move.end_row ][move.end_col]=move.piece_cap
-                        if self.cK:
-                            self.castling=strs[1]+self.castling
-                        if self.cQ:
-                            self.castling=strs[0]+self.castling
+                        if strs[0] == "K":
+                            if self.cK:
+                                self.castling=strs[0]+self.castling
+                            if self.cQ:
+                                self.castling=strs[1]+self.castling     
+                        else:
+                            if  self.ck:
+                                self.castling=strs[0]+self.castling
+                            if self.cq:
+                                self.castling=strs[1]+self.castling  
             #UNDO En-Passant
             if self.en_Pc>0 and self.move_N == self.enPcl[len(self.enPcl)-1]:
                 st="w"
@@ -279,15 +343,22 @@ class GameState():
                 self.board[move.st_row ][move.st_col]=move.piece_moved
                 self.board[move.end_row ][move.end_col]=move.piece_cap
             
-            if move.st_row == 7 and move.st_col == 7 and move.piece_moved == "wR" and "K" not in self.castling and self.cK:
+            if ((move.st_row == 7 and move.st_col == 7) or (move.end_row == 7 and move.end_col == 7)) and "K" not in self.castling and not self.cK and self.move_N in self.cl_m:
                 self.castling  = "K"+self.castling
-            if move.st_row == 7 and move.st_col == 0 and move.piece_moved == "wR" and "Q" not in self.castling and self.ck:   
-                self.castling  =self.castling+"Q"  
-            if move.st_row == 0 and move.st_col == 7 and move.piece_moved == "bR" and "k" not in self.castling and self.cQ:
+                self.cK = True
+                self.cl_m.pop()
+            if ((move.st_row == 7 and move.st_col == 0) or (move.end_row == 7 and move.end_col == 0))  and "Q" not in self.castling and not self.cQ and self.move_N in self.cl_m:   
+                self.castling  =self.castling+"Q" 
+                self.cQ = True 
+                self.cl_m.pop()
+            if ((move.st_row == 0 and move.st_col == 7) or (move.end_row == 0 and move.end_col == 7)) and "k" not in self.castling and not self.ck and self.move_N in self.cl_m:
                 self.castling  = "k"+self.castling
-            if move.st_row == 0 and move.st_col == 0 and move.piece_moved == "bR" and "q" not in self.castling and self.cq:   
+                self.ck = True
+                self.cl_m.pop()
+            if ((move.st_row == 0 and move.st_col == 0) or (move.end_row == 0 and move.end_col == 0)) and "q" not in self.castling and not self.cq and self.move_N in self.cl_m:   
                 self.castling  =self.castling+"q"
-            
+                self.cq = True
+                self.cl_m.pop()
             self.en_Passant=self.backup_en_passant.pop()       
             if self.to_Move == 'w':
                 self.to_Move='b'
@@ -319,7 +390,39 @@ class GameState():
                         self.moves=self.getRookMoves(r,c,self.moves,temp)       
         #print(moves)
         return self.moves
-    
+    #INEFFICIENT AND BAD ALGO
+    #def getValidMoves(self):
+        self.valid_Moves=[]
+        moves=self.getAllMoves()
+        sc=self.to_Move
+        t=0
+        t_b=GameState(self.Board2Fen())
+        
+        for m in moves:
+            t+=1
+            t_move= Move(((int(m[2]),int(m[3])),(int(m[4]),int(m[5]))),t_b.board)
+            t_b.make_Move(t_move)
+            
+            op_moves= t_b.getAllMoves()
+            
+            k=0
+            for p in op_moves:
+                if t_b.board[int(p[4])][int(p[5])] == sc+"K":
+                    
+                    k+=1
+                    break
+            
+            
+            if k==0:
+                self.valid_Moves.append(m)
+            t_b.undo_Move()
+            #self.undo_Move()
+       
+        self.c=0 
+        return self.valid_Moves
+    def getValidMoves(self):
+        pass
+          
 #These Genereate all POSSIBLE moves for respective pieces   
     def getPawnMoves(self,r,c,moves,piece):
         
@@ -347,7 +450,7 @@ class GameState():
                         
                         moves.append(movenot)
         if((r==1 and same=='b') or (r==6 and same=='w')):                
-            if(self.board[r+k*2][c]=="em"):
+            if(self.board[r+k*2][c]=="em" and self.board[r+k][c]=="em"):
                 move=Move(((r,c),(r+k*2,c)),self.board)
                 movenot=Move.inNotation(move)
                 moves.append(movenot)
@@ -360,9 +463,7 @@ class GameState():
             if (c+i)<8 and (c+i)>=0 :
                 
                 if  (Move.Num2LETR[c+i+1]+str(8-r)) in self.en_Passant:
-                    print("True")
-                    print((Move.Num2LETR[c+i+1]+str(8-r)))
-                    print(self.en_Passant)
+                   
                     move=Move(((r,c),(r+inx,c+i)),self.board)
                     movenot=Move.inNotation(move)
                     moves.append(movenot) 
@@ -376,187 +477,32 @@ class GameState():
               move=Move(((r,c),(p[0],p[1])),self.board)
               movenot=Move.inNotation(move)
               moves.append(movenot)  
-        return moves
-   
-   #Have to "optimize the  if statements"
-    def getQueenMoves(self,r,c,moves,piece):
-        same=piece[0]
-        
-        #VerticalDown
-        for i,row in enumerate(range(r+1,8)):
-            if self.board[row][c] =="em":
-               move=Move(((r,c),(row,c)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               v_max=i 
-            if self.board[row][c][0] == same:
-               break
-            if self.board[row][c][0] != same and self.board[row][c] !="em":
-               move=Move(((r,c),(row,c)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               v_max=i 
-               break
-        #VerticalUp
-        for i,row in enumerate(range(r-1,-1,-1)):
-            if self.board[row][c] =="em":
-               move=Move(((r,c),(row,c)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               v_min=i 
-            if self.board[row][c][0] == same:
-               break
-            if self.board[row][c][0] != same and  self.board[row][c] !="em":
-               move=Move(((r,c),(row,c)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               v_min=i 
-               break
-        #HorizontalRight
-        for i,col in enumerate(range(c+1,8)):
-            if self.board[r][col] =="em":
-               move=Move(((r,c),(r,col)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               v_min=i 
-            if self.board[r][col][0] == same:
-               break
-            if self.board[r][col][0] != same and self.board[r][col] !="em" :
-               move=Move(((r,c),(r,col)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               v_min=i 
-               break
-        #HorizontalLeft
-        for i,col in enumerate(range(c-1,-1,-1)):
-            if self.board[r][col] =="em":
-               move=Move(((r,c),(r,col)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               h_max=i 
-            if self.board[r][col][0] == same:
-               break
-            if self.board[r][col][0] != same and self.board[r][col] !="em":
-               move=Move(((r,c),(r,col)),self.board)
-               movenot=Move.inNotation(move)
-               moves.append(movenot)
-               h_min=i 
-               break
-        #Diagonal^->
-        for i in range(1,8):
-            if (r-i)>=0 and (c+i)<=7:
-                if self.board[r-i][c+i] =="em":
-                    move=Move(((r,c),(r-i,c+i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
-                if self.board[r-i][c+i][0] == same:
-                    break
-                if self.board[r-i][c+i][0] != same and self.board[r-i][c+i] !="em":
-                    move=Move(((r,c),(r-i,c+i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
-                    break
-        #Diagonal<-^
-        for i in range(1,8):
-            if (r-i)>=0 and (c-i)>=0:
-                if self.board[r-i][c-i] =="em":
-                    move=Move(((r,c),(r-i,c-i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot) 
-                if self.board[r-i][c-i][0] == same:
-                    break
-                if self.board[r-i][c-i][0] != same and self.board[r-i][c-i] !="em":
-                    move=Move(((r,c),(r-i,c-i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot) 
-                    break
-        #Diagonal<-v
-        for i in range(1,8):
-            if (r+i)<=7 and (c-i)>=0:
-                if self.board[r+i][c-i] =="em":
-                    move=Move(((r,c),(r+i,c-i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
-                    
-                if self.board[r+i][c-i][0] == same:
-                    break
-                if self.board[r+i][c-i][0] != same and self.board[r+i][c-i] !="em":
-                    
-                    move=Move(((r,c),(r+i,c-i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot) 
-                    
-                    break
-        #Diagonalv->
-        for i in range(1,8):
-            if (r+i)<=7 and (c+i)<=7:
-                if self.board[r+i][c+i] =="em":
-                    move=Move(((r,c),(r+i,c+i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot) 
-                if self.board[r+i][c+i][0] == same:
-                    break
-                if self.board[r+i][c+i][0] != same and self.board[r+i][c+i] !="em":
-                    move=Move(((r,c),(r+i,c+i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot) 
-                    break
-        return moves
+        return moves       
     def getRookMoves(self,r,c,moves,piece):
         same=piece[0]
-        #VerticalDown
-        for i,row in enumerate(range(r+1,8)):
-            if self.board[row][c] =="em":
-                move=Move(((r,c),(row,c)),self.board)
-                movenot=Move.inNotation(move)
-                moves.append(movenot)
-            else:
-                if self.board[row][c][0] != same and self.board[row][c] !="em":
-                    move=Move(((r,c),(row,c)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
+        startR = [r+1,r-1,c+1,c-1]
+        edgeR = [8,-1,8,-1]
+        incrR = [1,-1,1,-1]
+        for i in range (4):
+        #Vertical
+            for row in range(startR[i],edgeR[i],incrR[i]):
+                        change = self.board[row][c]
+                        end=(row,c)
+                        if i>1:
+                            change = self.board[r][row]
+                            end=(r,row)
+                        if change =="em":
+                            move=Move(((r,c),end),self.board)
+                            movenot=Move.inNotation(move)
+                            moves.append(movenot)
+                        else:
+                            if change[0] != same and change !="em":
+                                move=Move(((r,c),end),self.board)
+                                movenot=Move.inNotation(move)
+                                moves.append(movenot)
 
-                break
-        #VerticalUp
-        for i,row in enumerate(range(r-1,-1,-1)):
-            if self.board[row][c] =="em":
-                move=Move(((r,c),(row,c)),self.board)
-                movenot=Move.inNotation(move)
-                moves.append(movenot)
-                
-            else:
-                if self.board[row][c][0] != same and  self.board[row][c] !="em":
-                    move=Move(((r,c),(row,c)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
-                
-                break
-        #HorizontalRight
-        for i,col in enumerate(range(c+1,8)):
-            if self.board[r][col] =="em":
-                move=Move(((r,c),(r,col)),self.board)
-                movenot=Move.inNotation(move)
-                moves.append(movenot)
-            else:    
-                if self.board[r][col][0] != same and self.board[r][col] !="em" :
-                    move=Move(((r,c),(r,col)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
-                
-                break
-        #HorizontalLeft
-        for i,col in enumerate(range(c-1,-1,-1)):
-            if self.board[r][col] =="em":
-                move=Move(((r,c),(r,col)),self.board)
-                movenot=Move.inNotation(move)
-                moves.append(movenot)
-            else:
-                if self.board[r][col][0] != same and self.board[r][col] !="em":
-                    move=Move(((r,c),(r,col)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot)
-                
-                break
+                            break
+        
         return moves
     def getBishopMoves(self,r,c,moves,piece):
         same=piece[0]
@@ -618,6 +564,12 @@ class GameState():
                         moves.append(movenot) 
                     break
         return moves
+    def getQueenMoves(self,r,c,moves,piece):
+        same=piece[0]
+        moveQ=[]
+        moves= self.getRookMoves(r,c,moves,piece)
+        moves+= self.getBishopMoves(r,c,moveQ,piece)
+        return moves
     def getKingMoves(self,r,c,moves,piece):
         same=piece[0]
         possibilities=[(r+1,c),(r+1,c+1),(r+1,c-1),(r,c-1),(r,c+1),(r-1,c+1),(r-1,c-1),(r-1,c)]
@@ -653,7 +605,7 @@ class GameState():
         FEN=""
         for r in range(len(self.board)):
             k=0
-            for c in range(len(self.board[r])):
+            for i,c in enumerate(range(len(self.board[r]))):
                 if self.board[r][c] == "em":
                     
                     k+=1
@@ -664,9 +616,9 @@ class GameState():
                       k=0
                     else:
                      FEN+=N2Piece[self.board[r][c]]
-                if k==8:
-                    FEN+=str(k)
-            if k != 8:    
+            if i==7 and k!=0:
+                FEN+=str(k)
+            if r != 7:   
                 FEN+="/"
         FEN+=" "
         FEN+=self.to_Move
@@ -677,9 +629,34 @@ class GameState():
         FEN+=" "
         for v in self.en_Passant:
             FEN+=v.lower()
+        if self.en_Passant == "":
+            FEN+="-"
         FEN+=" "
         FEN+=str(self.n_Hmove)
         FEN+=" "
         FEN+=str(self.n_Fmove)
-        return FEN  
+        return FEN+" "+str(self.cK) +str(self.ck)+str(self.cQ)+str(self.cq)    
 
+    def getPositions(self,depth):
+        if depth == 0 :
+            
+            return 1
+        movess=self.getValidMoves()
+        positions=0
+        for t in movess:
+            
+            move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),self.board)
+            
+            self.make_Move(move)
+            positions +=self.getPositions(depth-1)
+            self.undo_Move()
+        
+        return positions 
+
+#gs= GameState(start_Fen)
+depth=3
+start=time.time()
+#test=gs.getPositions(depth)
+end=time.time()
+print(end-start)
+#print(test)
