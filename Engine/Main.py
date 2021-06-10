@@ -78,8 +78,8 @@ def mainGame(START_POS,SHOW_MOVES):
     #While game instance is open
     while running:
         counter+=1
-        if gs.to_Move=='b':
-            Ai_Turn = True
+        #if gs.to_Move=='b':
+            #Ai_Turn = True
         #mouse co-ordiantes on board
         mx,my = pg.mouse.get_pos()
         click = False
@@ -88,7 +88,7 @@ def mainGame(START_POS,SHOW_MOVES):
 
         if Ai_Turn:
             ntp={0:'B',1:'R',2:'Q',3:'N'}
-            #time.sleep(1)
+            time.sleep(0.001)
             ai_move=gs.ai_Make_Move()
             if(ai_move == "END"):
                 w="Black"
@@ -105,13 +105,13 @@ def mainGame(START_POS,SHOW_MOVES):
             if ai_move.piece_moved[1] == "P":
                 ##Check if promotion move
                 if ai_move.piece_moved == 'w' and ai_move.end_row==0:
-                    test=random.randint(0,4)
-                    gs.board[int(sl[2])][int(sl[3])]='w'+str(ntp[test])
+                    test=random.randint(0,3)
+                    gs.board[int(sl[2])][int(sl[3])]="w"+ntp[test]
                 if ai_move.piece_moved[0] == 'b' and ai_move.end_row==7:
                     
-                    test=random.randint(0,4)
+                    test=random.randint(0,3)
                     print("test",test,'b'+str(ntp[test]))
-                    gs.board[int(sl[2])][int(sl[3])]='b'+ntp[test]
+                    gs.board[int(sl[2])][int(sl[3])]="b"+ntp[test]
             last_move=sel_list
             move_made=True
             selected=()
@@ -196,7 +196,7 @@ def mainGame(START_POS,SHOW_MOVES):
                                 #Make move if Valid
                                 if(rn in validmoves):
                                     gs.make_Move(move)
-                            
+                                    print(gs.king_pos)
                                     pg.mixer.Sound.play(move_sound)
                                     pg.mixer.music.stop()
                                     if move.piece_moved[1] == "P":
@@ -339,6 +339,7 @@ def mainGame(START_POS,SHOW_MOVES):
                 pg.mixer.music.stop()
                 validmoves=gs.getValidMoves()  
                 move_made = False
+        
         #Give FEN of given position
         givet = font.render("Export Fen", True, 'pink')
         giveRect = givet.get_rect()

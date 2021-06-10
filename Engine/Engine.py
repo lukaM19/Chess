@@ -2,8 +2,10 @@ import re
 import random
 import copy
 import time
+
+from pygame.mixer import get_num_channels
 start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-##test_fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
+#start_Fen="rnb1k2r/pp1pp1pp/1b2qp2/2p5/4P1n1/3PK2Q/PPP2PPP/RNB2BNR w kq - 0 1"
 ##test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
 def to_piece(ch):
     return {
@@ -26,15 +28,20 @@ def fen_2board(fen):
     board =[ ["em"]*8 for i in range(8)]
     st = fen.split()
     brd= st[0].split("/")
-
+    wking=()
+    bking=()
     for ind,row in enumerate(brd): 
         k = 0
         for index,i in enumerate(row):  
             if i.isdigit() :
                 k = k+int(i)
             else:
-               
+                
                 val = to_piece(i) 
+                if val=="wK":
+                    wking=(ind,k)
+                if val == "bK":
+                    bking=(ind,k)
                 board[ind][k] = val
                 k += 1
     #turn to move
@@ -58,7 +65,7 @@ def fen_2board(fen):
         #Number of fullmoves made
         n_Fmove = 0
 
-    return board,to_Move,castling,en_Passant,n_Fmove,n_Hmove
+    return board,to_Move,castling,en_Passant,n_Fmove,n_Hmove,(wking,bking)
 
 #Move class for making handling a move easier, also produces notations for the given moves 
 class Move():
@@ -102,9 +109,9 @@ class GameState():
     def __init__(self,init_fen):
         self.log=[]
         if init_fen:
-            self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(init_fen)
+            self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove,self.king_pos = fen_2board(init_fen)
         else:
-            self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove = fen_2board(start_Fen)
+            self.board,self.to_Move,self.castling,self.en_Passant,self.n_Hmove,self.n_Fmove,self.king_pos = fen_2board(start_Fen)
         self.cK = False
         self.ck= False
         self.cQ= False
@@ -114,7 +121,10 @@ class GameState():
         self.enPcl =[]
         self.c=0
         self.cl_m=[]
-        self.king_pos=()
+        self.inCheck = False
+        self.checks = []
+        self.pins = []
+        
         if "K" in self.castling:
             self.cK= True
         if "k" in self.castling:
@@ -125,6 +135,7 @@ class GameState():
             self.cq= True
             
     def ai_Make_Move(self):
+        
         ai_move=""
         if(len(self.valid_Moves)==0 ):
                 return "END"
@@ -189,14 +200,11 @@ class GameState():
         if move.piece_moved[1] =='K':
             
             kq="KQ"
-            rook=""
-            row=0
-            if move.piece_moved[0] == 'w':
-                
-                rook="wR"
-                row=7
-               
-            else:
+            rook="wR"
+            row=7
+            kpos= True
+            if move.piece_moved[0] == 'b':
+                kpos=False
                 rook="bR"
                 row=0
                 kq=kq.lower()
@@ -217,14 +225,16 @@ class GameState():
                 self.board[move.st_row ][move.st_col]= "em"
                 self.board[move.end_row ][move.end_col]= move.piece_moved
                 self.log.append(move)
-            
-            
+            if kpos:
+                self.king_pos=((move.end_row,move.end_col),self.king_pos[1] )
+            else:
+                self.king_pos=(self.king_pos[0],(move.end_row,move.end_col) )
             self.castling= self.castling.replace(kq[1],"")
             self.castling= self.castling.replace(kq[0],"")
             
             
         #do en passant moves
-        elif  (move.piece_moved =='wP' and move.end_row==2 and self.board[move.end_row+1 ][move.end_col]== "bP") or(move.piece_moved == "bP" and move.end_row==5 and self.board[move.end_row-1 ][move.end_col]== "wP"): 
+        elif  self.board[move.end_row ][move.end_col]=="em" and (move.piece_moved =='wP' and move.end_row==2 and self.board[move.end_row+1 ][move.end_col]== "bP") or(move.piece_moved == "bP" and move.end_row==5 and self.board[move.end_row-1 ][move.end_col]== "wP"): 
             
             if move.piece_moved == "wP" :
                
@@ -232,7 +242,7 @@ class GameState():
                self.board[move.end_row ][move.end_col]= move.piece_moved
                self.board[move.end_row+1 ][move.end_col]="em"
                self.log.append(move) 
-            if move.piece_moved == "bP":
+            if move.piece_moved == "bP" :
                self.board[move.st_row ][move.st_col]= "em"
                self.board[move.end_row ][move.end_col]= move.piece_moved
                self.board[move.end_row-1 ][move.end_col]="em"
@@ -260,6 +270,9 @@ class GameState():
         if len(self.log) != 0:
             move=self.log.pop()
             self.temp=move
+
+
+
             #UNDO CASTLING
             if move.piece_moved[1] == "K" and move.st_col == 4:
                 row=0
@@ -342,7 +355,7 @@ class GameState():
             else:
                 self.board[move.st_row ][move.st_col]=move.piece_moved
                 self.board[move.end_row ][move.end_col]=move.piece_cap
-            
+    #Special cases and maintnance           
             if ((move.st_row == 7 and move.st_col == 7) or (move.end_row == 7 and move.end_col == 7)) and "K" not in self.castling and not self.cK and self.move_N in self.cl_m:
                 self.castling  = "K"+self.castling
                 self.cK = True
@@ -359,12 +372,20 @@ class GameState():
                 self.castling  =self.castling+"q"
                 self.cq = True
                 self.cl_m.pop()
+            if move.piece_moved[1] == "K":
+                if move.piece_moved[0] == "w":
+                    self.king_pos=((move.st_row,move.st_col),self.king_pos[1] )
+                else:
+                    self.king_pos=(self.king_pos[0],(move.st_row,move.st_col) ) 
+            
             self.en_Passant=self.backup_en_passant.pop()       
+            
             if self.to_Move == 'w':
                 self.to_Move='b'
             else:
                 self.to_Move='w'
             self.move_N+=-1
+
 #Get all POSSIBLE moves   
     def getAllMoves(self):
         self.moves=[]
@@ -391,7 +412,7 @@ class GameState():
         #print(moves)
         return self.moves
     #INEFFICIENT AND BAD ALGO
-    #def getValidMoves(self):
+    def getVaalidMoves(self):
         self.valid_Moves=[]
         moves=self.getAllMoves()
         sc=self.to_Move
@@ -421,7 +442,71 @@ class GameState():
         self.c=0 
         return self.valid_Moves
     def getValidMoves(self):
-        pass
+        moves=self.getAllMoves()
+        validmoves=[]
+        self.inCheck,self.checks,self.pins=self.getCheckPin()
+        print(self.inCheck,self.checks,self.pins)
+        aCol='w'
+        kp=0
+        if self.to_Move=='b':
+            aCol='b'
+            kp=1
+        if len(self.checks)>1:
+            return self.getKingMoves(self.king_pos[kp][0],self.king_pos[kp][1],validmoves,aCol+"K")
+        else:
+            if not self.inCheck :
+              for m in moves:
+                    if (int(m[2]),int(m[3])) not in self.pins:
+                        validmoves.append(m)
+            else:
+                if (int(m[2]),int(m[3])) not in self.pins and :
+                        validmoves.append(m)  
+        return validmoves
+    def getCheckPin(self):
+        inCheck= False
+        pins=[]
+        checks=[]
+        aCol= self.to_Move
+        eCol= 'b'
+        kp=0
+        if self.to_Move=='b':
+            eCol='w'
+            kp=1
+        
+        king=self.king_pos[kp]
+        dir=[(0,1),(0,-1),(1,0),(-1,0),(1,1),(-1,-1),(1,-1),(-1,1)]
+        for j,d in enumerate(dir):
+            ppin=()
+            for i in range(1,8):
+                r=king[0]+i*d[0]
+                c=king[1]+i*d[1]
+                if 0<=r and r<8 and c<8 and c>=0:
+                    if self.board[r][c][0] == aCol:
+                        if ppin==():
+                            ppin=(r,c)#,d[0],d[1])
+                        else:
+                            break
+                    elif self.board[r][c][0] == eCol: 
+                        piece=self.board[r][c][1]
+                        if (piece == "R" and  0<=j and j<4) or (piece=="B" and 4<=j and j<8 ) or (piece == "P" and( (self.board[r][c][0]=='w' and j == 4 or j== 7) or (self.board[r][c][0]=='b' and j == 5 or j== 6) ) ) or piece=='Q' or (piece=='K' and i==1):
+                            if ppin == ():
+                                inCheck = True
+                                checks.append((r,c,d[0],d[1]))
+                                break
+                            else:
+                                pins.append(ppin)
+                                break
+                        else:
+                            break
+            knightpos=[]
+            knightpos= self.getKnightMoves(king[0],king[1],knightpos,aCol+"N")
+            for k in knightpos:
+                if self.board[int(k[4])][int(k[5])] == eCol+"N":
+                   inCheck = True
+                   checks.append(( int(k[4]),int(k[5]),int(k[4])-king[0],int(k[5])-king[1] ))      
+
+        return inCheck,checks,pins
+
           
 #These Genereate all POSSIBLE moves for respective pieces   
     def getPawnMoves(self,r,c,moves,piece):
@@ -457,6 +542,7 @@ class GameState():
                 
         enp=[-1,1]
         inx=-1
+        #EN PASSANT CHECK
         for i in enp:
             if same == 'b':
                 inx=1
@@ -624,8 +710,9 @@ class GameState():
         FEN+=self.to_Move
         FEN+=" "
         if self.castling=="":
-            self.castling="-"
-        FEN+=self.castling
+            FEN+="-"
+        if self.castling != "-":
+            FEN+=self.castling.replace("-","")
         FEN+=" "
         for v in self.en_Passant:
             FEN+=v.lower()
@@ -636,7 +723,7 @@ class GameState():
         FEN+=" "
         FEN+=str(self.n_Fmove)
         return FEN+" "+str(self.cK) +str(self.ck)+str(self.cQ)+str(self.cq)    
-
+#Temp test Methods
     def getPositions(self,depth):
         if depth == 0 :
             
@@ -650,13 +737,18 @@ class GameState():
             self.make_Move(move)
             positions +=self.getPositions(depth-1)
             self.undo_Move()
-        
+            
         return positions 
 
-#gs= GameState(start_Fen)
+gs= GameState(start_Fen)
 depth=3
 start=time.time()
-#test=gs.getPositions(depth)
+
+test=gs.getPositions(depth)
+
+
 end=time.time()
 print(end-start)
-#print(test)
+print(test)
+a,b,c=gs.getCheckPin()
+print(a,b,c)
