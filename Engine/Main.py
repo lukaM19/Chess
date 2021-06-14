@@ -196,7 +196,8 @@ def mainGame(START_POS,SHOW_MOVES):
                                 #Make move if Valid
                                 if(rn in validmoves):
                                     gs.make_Move(move)
-                                    print(gs.king_pos)
+                                    print(gs.to_Move,"pins: ",gs.pins)
+                                    #print(gs.king_pos)
                                     pg.mixer.Sound.play(move_sound)
                                     pg.mixer.music.stop()
                                     if move.piece_moved[1] == "P":

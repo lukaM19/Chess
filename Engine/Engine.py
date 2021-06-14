@@ -5,7 +5,7 @@ import time
 
 from pygame.mixer import get_num_channels
 start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#start_Fen="rnb1k2r/pp1pp1pp/1b2qp2/2p5/4P1n1/3PK2Q/PPP2PPP/RNB2BNR w kq - 0 1"
+#start_Fen="rnb1k2r/pp1pp1pp/1b2pp2/2q3n1/1p2P3/3PK2Q/PPP3PP/RNB2BNR w kq - 0 1"
 ##test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
 def to_piece(ch):
     return {
@@ -124,7 +124,8 @@ class GameState():
         self.inCheck = False
         self.checks = []
         self.pins = []
-        
+        self.notKing= []
+
         if "K" in self.castling:
             self.cK= True
         if "k" in self.castling:
@@ -137,7 +138,7 @@ class GameState():
     def ai_Make_Move(self):
         
         ai_move=""
-        if(len(self.valid_Moves)==0 ):
+        if(len(self.validmoves)==0 ):
                 return "END"
         else:
             test=random.randint(0,len(self.valid_Moves)-1)
@@ -397,19 +398,19 @@ class GameState():
                 color=temp[0]
                 piece=temp[1].lower()
                 if color== self.to_Move:
+                    if piece =='k':
+                        self.moves=self.getKingMoves(r,c,self.moves,temp)                    
                     if piece =='p':
                         self.moves=self.getPawnMoves(r,c,self.moves,temp)
                     if piece =='n':
                         self.moves=self.getKnightMoves(r,c,self.moves,temp)
-                    if piece =='k':
-                        self.moves=self.getKingMoves(r,c,self.moves,temp)
                     if piece =='q':
                         self.moves=self.getQueenMoves(r,c,self.moves,temp)
                     if piece =='b':
                         self.moves=self.getBishopMoves(r,c,self.moves,temp)
                     if piece =='r':
                         self.moves=self.getRookMoves(r,c,self.moves,temp)       
-        #print(moves)
+        #print(self.moves,"PAWNED")
         return self.moves
     #INEFFICIENT AND BAD ALGO
     def getVaalidMoves(self):
@@ -443,29 +444,54 @@ class GameState():
         return self.valid_Moves
     def getValidMoves(self):
         moves=self.getAllMoves()
-        validmoves=[]
-        self.inCheck,self.checks,self.pins=self.getCheckPin()
+        self.validmoves=[]
+        available=[]
+        sec_p=[]
+        self.whP=[]
+        
+        self.inCheck,self.checks,self.pins,available,sec_p,self.whP,self.notKing=self.getCheckPin()
         print(self.inCheck,self.checks,self.pins)
         aCol='w'
         kp=0
         if self.to_Move=='b':
             aCol='b'
             kp=1
-        if len(self.checks)>1:
-            return self.getKingMoves(self.king_pos[kp][0],self.king_pos[kp][1],validmoves,aCol+"K")
+        if len(set(self.checks))>1:
+            #print("0")
+            mvs= self.getKingMoves(self.king_pos[kp][0],self.king_pos[kp][1],self.validmoves,aCol+"K")
+            m=[]
+            #for v in mvs:
+                #if (int(v[4]), int(v[5])) not in self.notKing and (int(v[4]), int(v[5])) not in sec_p :
+                   # m.append(v)
+            return mvs
         else:
             if not self.inCheck :
-              for m in moves:
-                    if (int(m[2]),int(m[3])) not in self.pins:
-                        validmoves.append(m)
+              #print("1")
+              for m in moves:  
+                
+                    if (int(m[2]),int(m[3])) not in self.pins :
+                       self.validmoves.append(m)
+                    elif self.whP[self.pins.index((int(m[2]),int(m[3])))] == (int(m[4]),int(m[5])):
+                        self.validmoves.append(m)
+                    
             else:
-                if (int(m[2]),int(m[3])) not in self.pins and :
-                        validmoves.append(m)  
-        return validmoves
+              #print("2",moves)
+              for m in moves:
+                    if (int(m[2]),int(m[3]))  not in self.pins :
+                        
+                        for index,a in enumerate(available):
+                            if a == (int(m[4]),int(m[5])) or m[1]=="K":
+                                
+                                    self.validmoves.append(m)
+        #print(validmoves)
+        # or (m[1] =="K" and self.board[int(m[4])][int(m[5])]==self.board[int(self.checks[index][0])][int(self.checks[index][1])]  )
+
+        return self.validmoves
     def getCheckPin(self):
         inCheck= False
         pins=[]
         checks=[]
+        sec_Pins = []
         aCol= self.to_Move
         eCol= 'b'
         kp=0
@@ -474,39 +500,130 @@ class GameState():
             kp=1
         
         king=self.king_pos[kp]
+        
         dir=[(0,1),(0,-1),(1,0),(-1,0),(1,1),(-1,-1),(1,-1),(-1,1)]
+        avals=[]
+        wpin= []
+        notKing= []
         for j,d in enumerate(dir):
             ppin=()
+            tmp=[]
+            bol = False
+            tst = False
+            
             for i in range(1,8):
                 r=king[0]+i*d[0]
                 c=king[1]+i*d[1]
+                
                 if 0<=r and r<8 and c<8 and c>=0:
-                    if self.board[r][c][0] == aCol:
+                    if self.board[r][c][0] == aCol and self.board[r][c][1] !="K":
                         if ppin==():
                             ppin=(r,c)#,d[0],d[1])
+                            
+                        else:
+                            break
+                    elif self.board[r][c] == "em":
+                        tmp.append((r,c))
+                    elif not bol and self.board[r][c][0] == eCol and len(sec_Pins) == 0  and len(checks) >0:
+                        sec_Pins.append( (int(checks[len(checks)-1][0]), int(checks[len(checks)-1][1]) )    )
+                        bol = True
+                        break
+                    elif self.board[r][c][0] == eCol and not tst: 
+                        piece=self.board[r][c][1]
+                        if (piece == "R" and  0<=j and j<4) or (piece=="B" and 4<=j and j<8 ) or (piece == "P" and i==1 and( (self.board[r][c][0]=='w' and j == 4 or j== 7) or (self.board[r][c][0]=='b' and j == 5 or j== 6) ) ) or piece=='Q' or (piece=='K' and i==1):
+                            if ppin == ():
+                                inCheck = True
+                                notKing +=tmp
+                                op = -1    
+                                if j%2==0:
+                                    op=1
+                                for t1 in range(1,8):
+                                    rt=king[0]+t1*dir[j+op][0]
+                                    ct=king[1]+t1*dir[j+op][1]
+
+                                    if 0<=rt and rt<8 and ct<8 and ct>=0 :     
+                                        
+                                        if self.board[rt][ct] == "em":
+                                            notKing.append((rt,ct))
+                                        else:
+                                            break
+                                    else:
+                                        break                                
+                                tmp.append((r,c))
+                                avals+=tmp
+                                
+                                tst= False
+                                for t in range(len(tmp)):
+                                    checks.append((r,c,d[0],d[1]))
+
+                            else:
+                                pins.append(ppin)#,(r,c))
+                                wpin.append((r,c))
+                                break
+                        else:
+                            break
+        knightpos=[]
+        knightpos= self.getKnightMoves(king[0],king[1],knightpos,aCol+"N")
+        for k in knightpos:
+            if self.board[int(k[4])][int(k[5])] == eCol+"N":
+               inCheck = True
+               checks.append(( int(k[4]),int(k[5]),int(k[4])-king[0],int(k[5])-king[1] ))      
+
+        return inCheck,checks,pins,avals,sec_Pins,wpin,notKing
+    def getCheck(self):
+        inCheck= False
+        pins=[]
+        checks=[]
+        sec_Pins = []
+        aCol= self.to_Move
+        eCol= 'b'
+        kp=0
+        if self.to_Move=='b':
+            eCol='w'
+            kp=1
+        
+        king=self.king_pos[kp]
+        
+        dir=[(0,1),(0,-1),(1,0),(-1,0),(1,1),(-1,-1),(1,-1),(-1,1)]
+        notKing= []
+        for j,d in enumerate(dir):
+            ppin=()
+            tmp=[]
+            
+            for i in range(1,8):
+                r=king[0]+i*d[0]
+                c=king[1]+i*d[1]
+                
+                if 0<=r and r<8 and c<8 and c>=0:
+                    if self.board[r][c][0] == aCol and self.board[r][c][1] !="K":
+                        if ppin==():
+                            ppin=(r,c)#,d[0],d[1])
+                            
                         else:
                             break
                     elif self.board[r][c][0] == eCol: 
                         piece=self.board[r][c][1]
-                        if (piece == "R" and  0<=j and j<4) or (piece=="B" and 4<=j and j<8 ) or (piece == "P" and( (self.board[r][c][0]=='w' and j == 4 or j== 7) or (self.board[r][c][0]=='b' and j == 5 or j== 6) ) ) or piece=='Q' or (piece=='K' and i==1):
+                        if (piece == "R" and  0<=j and j<4) or piece=='Q' or (piece=="B" and 4<=j and j<8 ) or (piece == "P" and i==1 and( (self.board[r][c][0]=='w' and j == 4 or j== 7) or (self.board[r][c][0]=='b' and j == 5 or j== 6) ) )  or (piece=='K' and i==1):
                             if ppin == ():
                                 inCheck = True
                                 checks.append((r,c,d[0],d[1]))
-                                break
+                                if king == (6,5):
+                                    print("wkchecks",checks,r,c)
+                                break  
+
                             else:
-                                pins.append(ppin)
+                                pins.append(ppin)#,(r,c))
                                 break
                         else:
                             break
-            knightpos=[]
-            knightpos= self.getKnightMoves(king[0],king[1],knightpos,aCol+"N")
-            for k in knightpos:
-                if self.board[int(k[4])][int(k[5])] == eCol+"N":
-                   inCheck = True
-                   checks.append(( int(k[4]),int(k[5]),int(k[4])-king[0],int(k[5])-king[1] ))      
+        knightpos=[]
+        knightpos= self.getKnightMoves(king[0],king[1],knightpos,aCol+"N")
+        for k in knightpos:
+            if self.board[int(k[4])][int(k[5])] == eCol+"N":
+               inCheck = True
+               checks.append(( int(k[4]),int(k[5]),int(k[4])-king[0],int(k[5])-king[1] ))      
 
-        return inCheck,checks,pins
-
+        return inCheck
           
 #These Genereate all POSSIBLE moves for respective pieces   
     def getPawnMoves(self,r,c,moves,piece):
@@ -532,7 +649,6 @@ class GameState():
                     if(self.board[r+k*1][c+i]=="em"):
                         move=Move(((r,c),(r+k*1,c+i)),self.board)
                         movenot=Move.inNotation(move)
-                        
                         moves.append(movenot)
         if((r==1 and same=='b') or (r==6 and same=='w')):                
             if(self.board[r+k*2][c]=="em" and self.board[r+k][c]=="em"):
@@ -658,33 +774,48 @@ class GameState():
         return moves
     def getKingMoves(self,r,c,moves,piece):
         same=piece[0]
+        movesK=[]
         possibilities=[(r+1,c),(r+1,c+1),(r+1,c-1),(r,c-1),(r,c+1),(r-1,c+1),(r-1,c-1),(r-1,c)]
         pval=[p for p in possibilities if p[0]<=7 and p[1]<=7 and p[0]>=0 and p[1]>=0 ]
         for p in pval:
             if self.board[p[0]][p[1]]=="em" or self.board[p[0]][p[1]][0] != same:
               move=Move(((r,c),(p[0],p[1])),self.board)
               movenot=Move.inNotation(move)
-              moves.append(movenot)  
+              movesK.append(movenot)  
         #Castling
         if same == 'w' and r== 7 and c==4:
             if "K" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
               move=Move(((r,c),(r,c+2)),self.board)
               movenot=Move.inNotation(move)
-              moves.append(movenot)  
+              movesK.append(movenot)  
             if "Q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
               move=Move(((r,c),(r,c-2)),self.board)
               movenot=Move.inNotation(move)
-              moves.append(movenot)  
+              movesK.append(movenot)  
         if same == 'b' and r== 0 and c==4:
             if "k" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
               move=Move(((r,c),(r,c+2)),self.board)
               movenot=Move.inNotation(move)
-              moves.append(movenot)  
+              movesK.append(movenot)  
             if "q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
               move=Move(((r,c),(r,c-2)),self.board)
               movenot=Move.inNotation(move)
-              moves.append(movenot) 
-
+              movesK.append(movenot) 
+        #Filter to not walk into checks
+        
+        ogKing = self.king_pos
+        
+        valid_Kingmoves = []
+        for m in movesK:
+            if same == 'w':
+                self.king_pos=((int(m[4]),int(m[5])),ogKing[1] )
+            else:
+                self.king_pos=(ogKing[0] ,(int(m[4]),int(m[5])))  
+            CheckBool = self.getCheck()
+            if not CheckBool:
+                valid_Kingmoves.append(m)
+            self.king_pos = ogKing
+        moves+=valid_Kingmoves
         return moves
     def Board2Fen(self):
         N2Piece={'bR':'r','bB':'b','bN':'n','bP':'p','bQ':'q','bK':'k','wR':'R','wB':'B','wN':'N','wP':'P','wQ':'Q','wK':'K'}
@@ -741,14 +872,15 @@ class GameState():
         return positions 
 
 gs= GameState(start_Fen)
-depth=3
+depth=4
 start=time.time()
 
 test=gs.getPositions(depth)
 
-
 end=time.time()
 print(end-start)
 print(test)
-a,b,c=gs.getCheckPin()
-print(a,b,c)
+#a,b,c,d,e,f,g=gs.getCheckPin()
+#print("a",a,"b",b,"c",c,"d",d,"e",e,"f",f,"g",g)
+#m=gs.getValidMoves()
+
