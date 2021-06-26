@@ -3,10 +3,10 @@ import random
 import copy
 import time
 
-from pygame.mixer import get_num_channels
-start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#start_Fen="rnb1k2r/pp1pp1pp/1b2pp2/2q3n1/1p2P3/3PK2Q/PPP3PP/RNB2BNR w kq - 0 1"
-##test_fen="rnb1kbnr/ppp1pppp/3qQ3/3p4/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 1"
+#start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+start_Fen="r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+#rnbq1bnr/pppp1ppp/8/6P1/3kp2R/8/PPPPPPBP/RNBQK1N1 w Q - 0 1
+#start_Fen="rnbq1bnr/pppp1ppp/8/6P1/2k1p2R/2P5/PP1PPPBP/RNBQK1N1 w Q - 1 2"
 def to_piece(ch):
     return {
         'r':"bR",
@@ -97,7 +97,7 @@ class Move():
     def inNotation(self):
         return self.piece_moved+str(self.st_row)+str(self.st_col)+str(self.end_row) +str(self.end_col)
     def inChessNotation(self):
-        return self.N2Piece[self.piece_moved]+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
+        return self.Num2LETR[self.st_col+1]+str(8-self.st_row)+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
     def test(self):
         return self.piece_moved+self.Num2LETR[self.end_col+1]+str(8-self.end_row) 
 
@@ -412,7 +412,8 @@ class GameState():
                         self.moves=self.getRookMoves(r,c,self.moves,temp)       
         #print(self.moves,"PAWNED")
         return self.moves
-    #INEFFICIENT AND BAD ALGO
+
+#INEFFICIENT AND BAD ALGO
     def getVaalidMoves(self):
         self.valid_Moves=[]
         moves=self.getAllMoves()
@@ -442,22 +443,23 @@ class GameState():
        
         self.c=0 
         return self.valid_Moves
+
+#GOOD ALGO    
     def getValidMoves(self):
         moves=self.getAllMoves()
         self.validmoves=[]
         available=[]
-        sec_p=[]
+        pin_dir=[]
         self.whP=[]
         
-        self.inCheck,self.checks,self.pins,available,sec_p,self.whP,self.notKing=self.getCheckPin()
-        print(self.inCheck,self.checks,self.pins)
+        self.inCheck,self.checks,self.pins,available,pin_dir,self.whP=self.getCheckPin()
+        #print(self.inCheck,self.checks,self.pins,self.whP)
         aCol='w'
         kp=0
         if self.to_Move=='b':
             aCol='b'
             kp=1
         if len(set(self.checks))>1:
-            #print("0")
             mvs= self.getKingMoves(self.king_pos[kp][0],self.king_pos[kp][1],self.validmoves,aCol+"K")
             m=[]
             #for v in mvs:
@@ -466,32 +468,32 @@ class GameState():
             return mvs
         else:
             if not self.inCheck :
-              #print("1")
               for m in moves:  
                 
                     if (int(m[2]),int(m[3])) not in self.pins :
                        self.validmoves.append(m)
-                    elif self.whP[self.pins.index((int(m[2]),int(m[3])))] == (int(m[4]),int(m[5])):
+                    elif (int(m[4]),int(m[5])) in pin_dir or self.whP[self.pins.index((int(m[2]),int(m[3])))] == (int(m[4]),int(m[5])):
                         self.validmoves.append(m)
                     
             else:
-              #print("2",moves)
               for m in moves:
+                    if m[1] == "K":
+                        self.validmoves.append(m)
                     if (int(m[2]),int(m[3]))  not in self.pins :
                         
                         for index,a in enumerate(available):
-                            if a == (int(m[4]),int(m[5])) or m[1]=="K":
-                                
+                            if a == (int(m[4]),int(m[5])) and m[1]!="K":
+                                    
                                     self.validmoves.append(m)
-        #print(validmoves)
-        # or (m[1] =="K" and self.board[int(m[4])][int(m[5])]==self.board[int(self.checks[index][0])][int(self.checks[index][1])]  )
+                        
+        
 
         return self.validmoves
     def getCheckPin(self):
         inCheck= False
         pins=[]
         checks=[]
-        sec_Pins = []
+        pind = []
         aCol= self.to_Move
         eCol= 'b'
         kp=0
@@ -524,31 +526,16 @@ class GameState():
                             break
                     elif self.board[r][c] == "em":
                         tmp.append((r,c))
-                    elif not bol and self.board[r][c][0] == eCol and len(sec_Pins) == 0  and len(checks) >0:
-                        sec_Pins.append( (int(checks[len(checks)-1][0]), int(checks[len(checks)-1][1]) )    )
-                        bol = True
-                        break
+                    
                     elif self.board[r][c][0] == eCol and not tst: 
                         piece=self.board[r][c][1]
                         if (piece == "R" and  0<=j and j<4) or (piece=="B" and 4<=j and j<8 ) or (piece == "P" and i==1 and( (self.board[r][c][0]=='w' and j == 4 or j== 7) or (self.board[r][c][0]=='b' and j == 5 or j== 6) ) ) or piece=='Q' or (piece=='K' and i==1):
                             if ppin == ():
                                 inCheck = True
-                                notKing +=tmp
                                 op = -1    
                                 if j%2==0:
                                     op=1
-                                for t1 in range(1,8):
-                                    rt=king[0]+t1*dir[j+op][0]
-                                    ct=king[1]+t1*dir[j+op][1]
-
-                                    if 0<=rt and rt<8 and ct<8 and ct>=0 :     
-                                        
-                                        if self.board[rt][ct] == "em":
-                                            notKing.append((rt,ct))
-                                        else:
-                                            break
-                                    else:
-                                        break                                
+                                                              
                                 tmp.append((r,c))
                                 avals+=tmp
                                 
@@ -559,6 +546,7 @@ class GameState():
                             else:
                                 pins.append(ppin)#,(r,c))
                                 wpin.append((r,c))
+                                pind+=tmp
                                 break
                         else:
                             break
@@ -567,9 +555,10 @@ class GameState():
         for k in knightpos:
             if self.board[int(k[4])][int(k[5])] == eCol+"N":
                inCheck = True
-               checks.append(( int(k[4]),int(k[5]),int(k[4])-king[0],int(k[5])-king[1] ))      
+               checks.append(( int(k[4]),int(k[5]),int(k[4])-king[0],int(k[5])-king[1] ))
+               avals.append((int(k[4]),int(k[5])))      
 
-        return inCheck,checks,pins,avals,sec_Pins,wpin,notKing
+        return inCheck,checks,pins,avals,pind,wpin
     def getCheck(self):
         inCheck= False
         pins=[]
@@ -607,9 +596,7 @@ class GameState():
                             if ppin == ():
                                 inCheck = True
                                 checks.append((r,c,d[0],d[1]))
-                                if king == (6,5):
-                                    print("wkchecks",checks,r,c)
-                                break  
+                                
 
                             else:
                                 pins.append(ppin)#,(r,c))
@@ -665,10 +652,24 @@ class GameState():
             if (c+i)<8 and (c+i)>=0 :
                 
                 if  (Move.Num2LETR[c+i+1]+str(8-r)) in self.en_Passant:
-                   
+                    
                     move=Move(((r,c),(r+inx,c+i)),self.board)
-                    movenot=Move.inNotation(move)
-                    moves.append(movenot) 
+                    self.make_Move(move)
+                    if self.to_Move=='w':
+                        self.to_Move='b'
+                    else:
+                        self.to_Move="w"
+                    if not self.getCheck():
+                        
+                        movenot=Move.inNotation(move)
+                        moves.append(movenot) 
+                    if self.to_Move=='w':
+                        self.to_Move='b'
+                    else:
+                        self.to_Move="w"    
+                    self.undo_Move()
+
+                    
         return moves
     def getKnightMoves(self,r,c,moves,piece):
         same=piece[0]
@@ -775,45 +776,66 @@ class GameState():
     def getKingMoves(self,r,c,moves,piece):
         same=piece[0]
         movesK=[]
+        filter_Castle=[]
+        castle_dir=[]
         possibilities=[(r+1,c),(r+1,c+1),(r+1,c-1),(r,c-1),(r,c+1),(r-1,c+1),(r-1,c-1),(r-1,c)]
         pval=[p for p in possibilities if p[0]<=7 and p[1]<=7 and p[0]>=0 and p[1]>=0 ]
         for p in pval:
             if self.board[p[0]][p[1]]=="em" or self.board[p[0]][p[1]][0] != same:
               move=Move(((r,c),(p[0],p[1])),self.board)
               movenot=Move.inNotation(move)
-              movesK.append(movenot)  
+              movesK.append(movenot)
+              filter_Castle.append("n")
+              castle_dir.append("n")  
         #Castling
-        if same == 'w' and r== 7 and c==4:
+        if not self.getCheck() and same == 'w' and r== 7 and c==4:
             if "K" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
               move=Move(((r,c),(r,c+2)),self.board)
               movenot=Move.inNotation(move)
-              movesK.append(movenot)  
+              movesK.append(movenot) 
+              filter_Castle.append("y")   
+              castle_dir.append(((int(movenot[4]),int(movenot[5])-1),self.king_pos[1] ))
             if "Q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
               move=Move(((r,c),(r,c-2)),self.board)
               movenot=Move.inNotation(move)
-              movesK.append(movenot)  
-        if same == 'b' and r== 0 and c==4:
+              movesK.append(movenot) 
+              filter_Castle.append("y") 
+              castle_dir.append(((int(movenot[4]),int(movenot[5])+1),self.king_pos[1] ))
+        if not self.getCheck() and same == 'b' and r== 0 and c==4:
             if "k" in self.castling and self.board[r][c+1]=="em" and self.board[r][c+2]== "em":
               move=Move(((r,c),(r,c+2)),self.board)
               movenot=Move.inNotation(move)
-              movesK.append(movenot)  
+              movesK.append(movenot)
+              filter_Castle.append("y")
+              castle_dir.append( (self.king_pos[0] ,(int(movenot[4]),int(movenot[5])-1))   )
             if "q" in self.castling and self.board[r][c-1]=="em" and self.board[r][c-2]== "em" and self.board[r][c-3]== "em":
               move=Move(((r,c),(r,c-2)),self.board)
               movenot=Move.inNotation(move)
               movesK.append(movenot) 
+              filter_Castle.append("y")
+              castle_dir.append ((self.king_pos[0] ,(int(movenot[4]),int(movenot[5])+1)) )  
+              
         #Filter to not walk into checks
         
         ogKing = self.king_pos
         
         valid_Kingmoves = []
-        for m in movesK:
+        for num,m in enumerate(movesK):
             if same == 'w':
                 self.king_pos=((int(m[4]),int(m[5])),ogKing[1] )
+                castle=((int(m[4]),int(m[5])-1),ogKing[1] )
+                
             else:
                 self.king_pos=(ogKing[0] ,(int(m[4]),int(m[5])))  
+                castle = (ogKing[0] ,(int(m[4]),int(m[5])-1))  
             CheckBool = self.getCheck()
             if not CheckBool:
-                valid_Kingmoves.append(m)
+                if filter_Castle[num]=="y":
+                    self.king_pos=castle_dir[num]
+                    if not self.getCheck():
+                        valid_Kingmoves.append(m)
+                else:      
+                    valid_Kingmoves.append(m)
             self.king_pos = ogKing
         moves+=valid_Kingmoves
         return moves
@@ -854,10 +876,10 @@ class GameState():
         FEN+=" "
         FEN+=str(self.n_Fmove)
         return FEN+" "+str(self.cK) +str(self.ck)+str(self.cQ)+str(self.cq)    
+
 #Temp test Methods
-    def getPositions(self,depth):
+    def getPositions(self,depth,test,pos):
         if depth == 0 :
-            
             return 1
         movess=self.getValidMoves()
         positions=0
@@ -866,21 +888,28 @@ class GameState():
             move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),self.board)
             
             self.make_Move(move)
-            positions +=self.getPositions(depth-1)
+            positions +=self.getPositions(depth-1,move.inChessNotation(),positions)
             self.undo_Move()
             
         return positions 
 
 gs= GameState(start_Fen)
-depth=4
+depth=3
 start=time.time()
-
-test=gs.getPositions(depth)
+tm=gs.getValidMoves()
+sum=0
+test=gs.getPositions(depth,"",0)
+for t in tm:
+    move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),gs.board)
+    gs.make_Move(move)
+    s=gs.getPositions(depth-1,"",0)
+    sum+=s
+    gs.undo_Move()
+    print(move.inChessNotation()+":",s)
 
 end=time.time()
 print(end-start)
-print(test)
+print(sum,test)
 #a,b,c,d,e,f,g=gs.getCheckPin()
 #print("a",a,"b",b,"c",c,"d",d,"e",e,"f",f,"g",g)
 #m=gs.getValidMoves()
-
