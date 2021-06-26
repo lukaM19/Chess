@@ -6,7 +6,7 @@ import random
 pg.init()
 
 #Global Variables
-WIDTH = HEIGHT = 720
+WIDTH = HEIGHT = 560 #720
 DIMENSION = 8
 SQ= HEIGHT//DIMENSION
 MAX_FPS = 60
@@ -17,6 +17,8 @@ click = False
 edge_pix=20
 LAUNCH = True
 font = pg.font.Font('freesansbold.ttf', 14)
+if WIDTH== 560:
+    font = pg.font.Font('freesansbold.ttf', 12)
 
 #Loading Pieces
 def loadPieces():
@@ -26,11 +28,13 @@ def loadPieces():
 
 #Main Game Process
 def mainGame(START_POS,SHOW_MOVES):
-    
+
+
+
     #Draw Game Window
     pg.display.set_caption('Play Game')
     start=time.time()
-    screen = pg.display.set_mode((WIDTH+20,HEIGHT+40))
+    screen = pg.display.set_mode((WIDTH+edge_pix,HEIGHT+2*edge_pix))
     #screen_bl=pg.transform.rotate(screen, 180), (0, 0)
     clock=pg.time.Clock()
     screen.fill(pg.Color("white"))
@@ -152,7 +156,7 @@ def mainGame(START_POS,SHOW_MOVES):
                         click = True
                         hold=False
                     #Mouse button is pressed inside the loop
-                    if mx>20 and my<720:
+                    if mx>20 and my<HEIGHT:
                         
                         row=(my)//SQ
                         col=(mx-edge_pix)//SQ
@@ -169,7 +173,7 @@ def mainGame(START_POS,SHOW_MOVES):
                             
                 #Mouse button is let go           
                 if e.type == pg.MOUSEBUTTONUP and hold:
-                    if mx>20 and my<=720:  
+                    if mx>20 and my<=HEIGHT:  
                         row=(my)//SQ
                         col=(mx-edge_pix)//SQ    
                         if selected == (row,col):
@@ -224,7 +228,7 @@ def mainGame(START_POS,SHOW_MOVES):
                     pos=pg.mouse.get_pos()
                     
             #Highlight last square from and to which  the move was made, Bound set to avoid the bug of pieces showing up on the side of the board
-            if hold  and (mx>30 and my<720):
+            if hold  and (mx>30 and my<HEIGHT):
                 highB= True
             #UPDATE Valid moves for new board position after a move was amde
             if move_made and mark_d<mark_md:
@@ -318,7 +322,7 @@ def mainGame(START_POS,SHOW_MOVES):
         #Quit Button and interaction on Click
         Quitt = font.render("Quit", True, 'pink')
         QuitRect = Quitt.get_rect()
-        QuitRect.center = (SQ-70,HEIGHT+10)
+        QuitRect.center = (Quitt.get_width()//2,HEIGHT+10)
         screen.blit(Quitt, QuitRect)
         if QuitRect.collidepoint((mx,my)) :
             if click:
@@ -329,7 +333,7 @@ def mainGame(START_POS,SHOW_MOVES):
              
         undot = font.render("Undo", True, 'pink')
         undoRect = undot.get_rect()
-        undoRect.center = (SQ-70,HEIGHT+30)
+        undoRect.center = (undot.get_width()//2,HEIGHT+30)
         screen.blit(undot, undoRect)
         if undoRect.collidepoint((mx,my)) :
             if click and len(last_move) !=0:
@@ -344,18 +348,21 @@ def mainGame(START_POS,SHOW_MOVES):
         #Give FEN of given position
         givet = font.render("Export Fen", True, 'pink')
         giveRect = givet.get_rect()
-        giveRect.center = (WIDTH//4,HEIGHT+25)
+        giveRect.center = (WIDTH//6,HEIGHT+25)
         screen.blit(givet, giveRect)
         if giveRect.collidepoint((mx,my)) :
             if click :
                 out = not out
         if out:
-            font_c = pg.font.Font('freesansbold.ttf', 10)
             txt=gs.Board2Fen()
+            fontsize=10
+            if WIDTH == 560:
+                fontsize= 9
+            font_c = pg.font.Font('freesansbold.ttf', fontsize)
             txt_t=font_c.render(txt, True, 'black')
             out_w=txt_t.get_width()+5
             outRect = txt_t.get_rect()
-            outRect.center = (WIDTH//4+givet.get_width()//2 + out_w//2 ,HEIGHT+25)
+            outRect.center = (WIDTH//6+givet.get_width()//2 + out_w//2 ,HEIGHT+25)
             screen.blit(txt_t, outRect)
                 
             
@@ -409,12 +416,12 @@ def drawBoard(screen):
             if r==7:
                 text = font.render(LETR[c+1], True, cl)
                 textRect = text.get_rect()
-                textRect.center = (c*SQ+SQ+14,HEIGHT-10)
+                textRect.center = (c*SQ+SQ+14,HEIGHT-7)
                 screen.blit(text, textRect)
             if c==0:
                 text = font.render(str((8-r)), True, cl)
                 textRect = text.get_rect()
-                textRect.center = (c*SQ+30,r*SQ+edge_pix)
+                textRect.center = (edge_pix+c*SQ+5,r*SQ+7)
                 screen.blit(text, textRect)
     
 # Draw the pieces on the screen 
@@ -423,7 +430,7 @@ def drawPieces(screen,board):
         for c in range(DIMENSION):
             p= board[r][c]
             if p != "em": 
-                screen.blit(IMAGES[p],pg.Rect(c*SQ+SQ/8+edge_pix,r*SQ+edge_pix,SQ,SQ))
+                screen.blit(IMAGES[p],pg.Rect(c*SQ+SQ/8+edge_pix,r*SQ+SQ//8+SQ//16,SQ,SQ))
 
 
 def main_Menu():
@@ -434,6 +441,7 @@ def main_Menu():
     START_POS=""
     SHOW_MOVES = False
     click= False
+    WIDTH=HEIGHT=560
     while LAUNCH == True:
         
         #INITIALIZE the display
@@ -466,6 +474,7 @@ def main_Menu():
         textRect.center = (WIDTH//2,100+HEIGHT//6+button[1]/2)
         settings_sc.blit(text, textRect)
 
+        #BUTTON HIGHLIGHT SETTING
         button_5 = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+120,170,40)
         color=""
         if SHOW_MOVES:
@@ -478,6 +487,21 @@ def main_Menu():
         textRect.center = (WIDTH//2,160+HEIGHT//6+button[1]/2)
         settings_sc.blit(text, textRect)
 
+        #BUTTON_3~SET SIZE
+        button_Size720 =  pg.Rect(WIDTH//2-85-2, 40+HEIGHT//6+button[1]/2+160,85,40)
+        pg.draw.rect(settings_sc,"black",button_Size720)
+        text720 = font.render("720", True, 'white')
+        textRect720 = text720.get_rect()
+        textRect720.center = (WIDTH//2-42.5-2,160+HEIGHT//6+button[1]/2+60)
+        settings_sc.blit(text720, textRect720)
+        button_Size560 =  pg.Rect(WIDTH//2+2, 40+HEIGHT//6+button[1]/2+160,85,40)
+        pg.draw.rect(settings_sc,"black",button_Size560)
+        text560 = font.render("560", True, 'white')
+        textRect560 = text560.get_rect()
+        textRect560.center = (WIDTH//2+42.5+2,160+HEIGHT//6+button[1]/2+60)
+        settings_sc.blit(text560, textRect560)
+
+        #WIDTH = HEIGHT = 560
         #BUTTON_4~Quit Button 
         button_4 = pg.Rect(WIDTH//2-button[0]/2,5*HEIGHT//6-button[1]/2,120,40)
         pg.draw.rect(settings_sc,'red',button_4)
@@ -507,7 +531,10 @@ def main_Menu():
         if button_5.collidepoint((mx,my)) :
             if click:
                 SHOW_MOVES = not SHOW_MOVES
-     
+        if button_Size720.collidepoint((mx,my)) and click:
+            WIDTH=HEIGHT=720
+        if button_Size560.collidepoint((mx,my)) and click:
+            WIDTH=HEIGHT=560
         click = False
         
         
@@ -541,7 +568,7 @@ def main_Menu():
             #Take in the input for the FEN String
             font_i= pg.font.Font('freesansbold.ttf', 12)
             inp_text = font_i.render(input, True, 'green')
-            inp_box = pg.Rect(WIDTH//2-125-180,20+HEIGHT//6+button[1]/2,174,40)
+            inp_box = pg.Rect(20,20+HEIGHT//6+button[1]/2,174,40)
             #Indicate by colors if we are currently accepting keyboard input for FEN
             if ST_INPUT:
                 pg.draw.rect(settings_sc,'blue',inp_box)
@@ -551,13 +578,13 @@ def main_Menu():
             settings_sc.blit(I_box_text, (inp_box.x, inp_box.y+12))
             #Change input box width if needed
             button_3_w=max(250,inp_text.get_width()+5)
-            button_3 = pg.Rect(WIDTH//2-125,20+HEIGHT//6+button[1]/2,button_3_w,40)
+            button_3 = pg.Rect(20+I_box_text.get_width()+2,20+HEIGHT//6+button[1]/2,button_3_w,40)
             pg.draw.rect(settings_sc,'black',button_3)
             settings_sc.blit(inp_text, (button_3.x+5, button_3.y+5))
             #Start takingin input if the input box ahs been clicked
             if button_3.collidepoint((mx,my)) :
                 if click:
-                 ST_INPUT = True
+                 ST_INPUT = not ST_INPUT
 
             pg.display.flip()
             clock.tick(60)
