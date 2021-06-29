@@ -3,10 +3,14 @@ import sys
 from Chess import Engine
 import time
 import random
+import ctypes  
+from tkinter import Tk
+
+
 pg.init()
 
 #Global Variables
-WIDTH = HEIGHT = 560 #720
+WIDTH = HEIGHT =560
 DIMENSION = 8
 SQ= HEIGHT//DIMENSION
 MAX_FPS = 60
@@ -68,7 +72,7 @@ def mainGame(START_POS,SHOW_MOVES):
     high_sur.set_alpha(25)
     move_made= False
     highB=False
-    out = True
+    out = False
     #Helps us make sure we only load valid moves once, after each move has been played
     counter=0
     mark_d=0
@@ -82,7 +86,7 @@ def mainGame(START_POS,SHOW_MOVES):
     #While game instance is open
     while running:
         counter+=1
-        #if gs.to_Move=='b':
+        #if gs.to_Move=='w':
             #Ai_Turn = True
         #mouse co-ordiantes on board
         mx,my = pg.mouse.get_pos()
@@ -92,7 +96,7 @@ def mainGame(START_POS,SHOW_MOVES):
 
         if Ai_Turn:
             ntp={0:'B',1:'R',2:'Q',3:'N'}
-            time.sleep(0.001)
+            time.sleep(0.1)
             ai_move=gs.ai_Make_Move()
             if(ai_move == "END"):
                 w="Black"
@@ -103,45 +107,24 @@ def mainGame(START_POS,SHOW_MOVES):
                 break
             sl=ai_move.inNotation()[2:]
             sel_list=((int(sl[0]),int(sl[1])),(int(sl[2]),int(sl[3])))
-            gs.make_Move(ai_move)
+            gs.make_Move(ai_move.inNotation())
             pg.mixer.Sound.play(move_sound)
             pg.mixer.music.stop()
             if ai_move.piece_moved[1] == "P":
                 ##Check if promotion move
-                if ai_move.piece_moved == 'w' and ai_move.end_row==0:
+                if ai_move.piece_moved[0] == 'w' and ai_move.end_row==0:
                     test=random.randint(0,3)
                     gs.board[int(sl[2])][int(sl[3])]="w"+ntp[test]
                 if ai_move.piece_moved[0] == 'b' and ai_move.end_row==7:
                     
                     test=random.randint(0,3)
-                    print("test",test,'b'+str(ntp[test]))
                     gs.board[int(sl[2])][int(sl[3])]="b"+ntp[test]
             last_move=sel_list
             move_made=True
             selected=()
             sel_list=[]
             validmoves=gs.getValidMoves()
-            wrn=0
-            brn=0
-            for r in range(8):
-                for c in range(8):
-                    if gs.board[r][c]=="wR":
-                        wrn+=1
-                    if gs.board[r][c]=="bR":
-                        brn+=1
-            if brn>=3 or wrn>=3:
-                logs=[v.inChessNotation() for v in gs.log]
-                print(gs.temp.inChessNotation())
-                print(logs)
-                Ai_Turn = False
-                print(gs.board[0])
-                print(gs.board[1])
-                print(gs.board[2])
-                print(gs.board[3])
-                print(gs.board[4])
-                print(gs.board[5])
-                print(gs.board[6])
-                gs.quit()
+            
             
             Ai_Turn= False
                 
@@ -189,7 +172,7 @@ def mainGame(START_POS,SHOW_MOVES):
                         if len(sel_list)==2 :
                             hold=False
                             #if staring square is empty or not your turn to move, reset move selection
-                            if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") :
+                            if(gs.board[sel_list[0][0]][sel_list[0][1]]=="em") or (gs.board[sel_list[0][0]][sel_list[0][1]][0]!=gs.to_Move ) :
                                 selected=()
                                 sel_list=[]
                             else:
@@ -198,9 +181,9 @@ def mainGame(START_POS,SHOW_MOVES):
                                 #print(Engine.Move.inNotation(move))
                                 rn=Engine.Move.inNotation(move)
                                 #Make move if Valid
-                                if(rn in validmoves):
-                                    gs.make_Move(move)
-                                    print(gs.to_Move,"pins: ",gs.pins)
+                                val=[v[:6] for v in validmoves]
+                                if(rn in val ):
+                                    gs.make_Move(rn)
                                     #print(gs.king_pos)
                                     pg.mixer.Sound.play(move_sound)
                                     pg.mixer.music.stop()
@@ -242,7 +225,7 @@ def mainGame(START_POS,SHOW_MOVES):
         highB = False
         #Handle pawn promotion
         if promotion_Move_w:
-            gs.to_Move='w'
+            gs.to_Move='pp'
             Rt = font.render("R", True, 'pink')
             RtRect = Rt.get_rect()
             RtRect.center = (10,20)
@@ -279,8 +262,9 @@ def mainGame(START_POS,SHOW_MOVES):
                     gs.board[move.end_row][move.end_col]="wQ"
                     promotion_Move_w=False
                     gs.to_Move='b'
+            validmoves=gs.getValidMoves() 
         if promotion_Move_b:
-            gs.to_Move='b'
+            gs.to_Move='pp'
             Rt = font.render("R", True, 'pink')
             RtRect = Rt.get_rect()
             RtRect.center = (10,20)
@@ -317,9 +301,10 @@ def mainGame(START_POS,SHOW_MOVES):
                     gs.board[move.end_row][move.end_col]="bQ"
                     promotion_Move_b=False
                     gs.to_Move='w'
+            validmoves=gs.getValidMoves() 
         end=time.time()
 
-        #Quit Button and interaction on Click
+    #Quit Button and interaction on Click
         Quitt = font.render("Quit", True, 'pink')
         QuitRect = Quitt.get_rect()
         QuitRect.center = (Quitt.get_width()//2,HEIGHT+10)
@@ -329,7 +314,7 @@ def mainGame(START_POS,SHOW_MOVES):
             
                 main_Menu()
 
-        #UNDO button and interaction on Click   
+    #UNDO button and interaction on Click   
              
         undot = font.render("Undo", True, 'pink')
         undoRect = undot.get_rect()
@@ -345,7 +330,7 @@ def mainGame(START_POS,SHOW_MOVES):
                 validmoves=gs.getValidMoves()  
                 move_made = False
         
-        #Give FEN of given position
+    #Give FEN of given position
         givet = font.render("Export Fen", True, 'pink')
         giveRect = givet.get_rect()
         giveRect.center = (WIDTH//6,HEIGHT+25)
@@ -364,6 +349,15 @@ def mainGame(START_POS,SHOW_MOVES):
             outRect = txt_t.get_rect()
             outRect.center = (WIDTH//6+givet.get_width()//2 + out_w//2 ,HEIGHT+25)
             screen.blit(txt_t, outRect)
+            choice=ctypes.windll.user32.MessageBoxW(0, "Current FEN: "+txt, "Press OK to Copy text", 1)
+            if choice == 1:
+                clip = Tk()
+                clip.withdraw()
+                clip.clipboard_clear()
+                clip.clipboard_append(txt)
+                clip.update() 
+                clip.destroy()
+            out=False
                 
             
         #Set FPS apply Changes
@@ -581,7 +575,7 @@ def main_Menu():
             button_3 = pg.Rect(20+I_box_text.get_width()+2,20+HEIGHT//6+button[1]/2,button_3_w,40)
             pg.draw.rect(settings_sc,'black',button_3)
             settings_sc.blit(inp_text, (button_3.x+5, button_3.y+5))
-            #Start takingin input if the input box ahs been clicked
+            #Start taking input if the input box ahs been clicked
             if button_3.collidepoint((mx,my)) :
                 if click:
                  ST_INPUT = not ST_INPUT
