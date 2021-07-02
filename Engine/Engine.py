@@ -4,7 +4,7 @@ import copy
 import time
 
 #start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-start_Fen="r4rk1/1pp2ppp/p1np1q2/2b1p1N1/2B1P1b1/P1NP4/1PP1QPPP/R4RK1 b - - 1 11"
+start_Fen="r3k2r/Pppp1ppp/1b3nbN/nP6/BBPPP3/4qN2/Pp4PP/R2Q1RK1 w kq - 1 2"
 #rnbq1bnr/pppp1ppp/8/6P1/3kp2R/8/PPPPPPBP/RNBQK1N1 w Q - 0 1
 #start_Fen="rnbq1bnr/pppp1ppp/8/6P1/2k1p2R/2P5/PP1PPPBP/RNBQK1N1 w Q - 1 2"
 def to_piece(ch):
@@ -286,7 +286,7 @@ class GameState():
         #do pawn promotion moves
         elif len(moveSTR) == 7:
             self.board[move.st_row ][move.st_col]= "em"
-            self.board[move.end_row ][move.end_col]= self.to_Move+moveSTR[6]
+            self.board[move.end_row ][move.end_col]= self.to_Move+moveSTR[6].upper()
             self.log.append(move)   
         #Regular moves      
         else:
@@ -511,7 +511,8 @@ class GameState():
         available=[]
         pin_dir=[]
         self.whP=[]
-        
+        pd=""
+
         self.inCheck,self.checks,self.pins,available,pin_dir,self.whP=self.getCheckPin()
         #print(self.inCheck,self.checks,self.pins,self.whP)
         aCol='w'
@@ -532,14 +533,29 @@ class GameState():
                 
                     if (int(m[2]),int(m[3])) not in self.pins :
                        self.validmoves.append(m)
-                    elif (int(m[4]),int(m[5])) in pin_dir or self.whP[self.pins.index((int(m[2]),int(m[3])))] == (int(m[4]),int(m[5])):
-                        self.validmoves.append(m)
+                    else:
+                        if int(m[2]) == self.king_pos[kp][0]:
+                            pd="h"
+                        elif int(m[3]) == self.king_pos[kp][1]:
+                            pd="v"
+                        else:
+                            pd="d"
+                        pin=""
+                        if int(m[4]) == self.king_pos[kp][0]:
+                            pin="h"
+                        elif int(m[5]) == self.king_pos[kp][1]:
+                            pin="v"
+                        else:
+                            pin="d"
+                        if ((int(m[4]),int(m[5])) in pin_dir and pd==pin)or self.whP[self.pins.index((int(m[2]),int(m[3])))] == (int(m[4]),int(m[5])):    
+                            
+                            self.validmoves.append(m)
                     
             else:
               for m in moves:
                     if m[1] == "K":
                         self.validmoves.append(m)
-                    if (int(m[2]),int(m[3]))  not in self.pins :
+                    elif (int(m[2]),int(m[3]))  not in self.pins :
                         
                         for index,a in enumerate(available):
                             if a == (int(m[4]),int(m[5])) and m[1]!="K":
@@ -570,8 +586,6 @@ class GameState():
         for j,d in enumerate(dir):
             ppin=()
             tmp=[]
-            bol = False
-            tst = False
             
             for i in range(1,8):
                 r=king[0]+i*d[0]
@@ -587,22 +601,18 @@ class GameState():
                     elif self.board[r][c] == "em":
                         tmp.append((r,c))
                     
-                    elif self.board[r][c][0] == eCol and not tst: 
+                    elif self.board[r][c][0] == eCol : 
                         piece=self.board[r][c][1]
                         if (piece == "R" and  0<=j and j<4) or (piece=="B" and 4<=j and j<8 ) or (piece == "P" and i==1 and( (eCol=='w' and (j == 4 or j== 6)) or (eCol=='b' and (j == 5 or j== 7) ) ) ) or piece=='Q' or (piece=='K' and i==1):
                             if ppin == ():
                                 
                                 inCheck = True
-                                op = -1    
-                                if j%2==0:
-                                    op=1
+                                
                                                               
                                 tmp.append((r,c))
                                 avals+=tmp
                                 
-                                tst= False
-                                for t in range(len(tmp)):
-                                    checks.append((r,c,d[0],d[1]))
+                                break
 
                             else:
                                 pins.append(ppin)#,(r,c))
@@ -657,7 +667,7 @@ class GameState():
                             if ppin == ():
                                 inCheck = True
                                 checks.append((r,c,d[0],d[1]))
-                                
+                                break
 
                             else:
                                 pins.append(ppin)#,(r,c))
@@ -971,7 +981,7 @@ class GameState():
         return positions 
 
 gs= GameState(start_Fen)
-depth=2
+depth=4
 start=time.time()
 tm=gs.getValidMoves()
 sum=0
@@ -979,9 +989,11 @@ sum=0
 #test=gs.getPositions(depth,"",0)
 
 for t in tm:
-    
+        
         move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),gs.board)
         gs.make_Move(t)
+       
+        
         s=gs.getPositions(depth-1,"",0)
         sum+=s
         gs.undo_Move()
@@ -990,7 +1002,7 @@ for t in tm:
             print(move.inChessNotation()+t[6]+":",s)
         else:
             print(move.inChessNotation()+":",s)   
-        #print( gs.Board2Fen())# != start_Fen:
+        print( gs.Board2Fen())# != start_Fen:
             #break
 
 
