@@ -24,8 +24,8 @@ Chess engine project
 >    * - [x] Pawn promotion and undo  
 >    * - [x] En passant and undo (Need to double check for bugs during undo)     
 >3. - [x] Checks 
->4, - [ ] Checkmate
->4. - [ ] Pinned pieces, discovered checks
+>4. - [ ] Checkmate
+>5. - [x] Pinned pieces, discovered checks
 
 ## To-Do
 * Position Evaluation&nbsp;\\
@@ -39,7 +39,7 @@ Chess engine project
 # Known Bugs
 * <s>the file and rank indexes get obstructed by piece drawings, if pieces are moved outside of board boundaries </s>
 * Need to at an additional check for validity of Custom Fen
-* Pawns check to their back right
+* <s>Pawns check to their back right</s>
 
 # **Resources**
 > https://www.pygame.org/docs/search.html?q=
