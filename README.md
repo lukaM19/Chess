@@ -10,6 +10,9 @@ Chess engine project
 - [ ]  
 
 ## Done-ish
+
+* add Comments in code, clear up useless code and variables
+
 * GUI??
  > - [x] Menu skeleton 
  > - [x] Basic navigation
