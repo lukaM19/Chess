@@ -14,17 +14,18 @@ Chess engine project
  > - [x] Menu skeleton 
  > - [x] Basic navigation
  > - [x] Custom starting positions
- > - [ ] select Bot/2-player mode
+ > - [x] select Bot/2-player mode
  > - [ ] probably will need to set depth from menu in future
+ > - [ ] Change between 560/720 modes
 
-* Game Rules
+* Game Rules 
 >1. - [x] Pawn,Rook,Knight,Bishop,King,Queen Move Rules added, Can generate all possible moves for the position
 >2. - [X] <s>pawn promotion, castling(&undo), enpassant(& undo)</s>
 >    * - [x] Castling and undo 
 >    * - [x] Pawn promotion and undo  
->    * - [x] En passant and undo (Need to double check for bugs during undo)     
+>    * - [x] En passant and undo <s>(Need to double check for bugs during undo)</s>     
 >3. - [x] Checks 
->4. - [ ] Checkmate
+>4. - [x] Checkmate, stalemate
 >5. - [x] Pinned pieces, discovered checks
 
 ## To-Do
