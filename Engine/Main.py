@@ -31,7 +31,7 @@ def loadPieces():
         IMAGES[piece] =pg.transform.scale( pg.image.load("Chess/images_HR/"+piece+".png"),(SQ-int(SQ/4),SQ-int(SQ/4)) )
 
 #Main Game Process
-def mainGame(START_POS,SHOW_MOVES):
+def mainGame(START_POS,SHOW_MOVES,ai,play_As):
 
 
 
@@ -80,19 +80,39 @@ def mainGame(START_POS,SHOW_MOVES):
     #Promotion handlers
     promotion_Move_w= False
     promotion_Move_b = False
+    #GAMEMODE VARIABLES
+    Play_Ai=ai
     Ai_Turn = False
-    
+    Ai_Color = play_As
 
     #While game instance is open
     while running:
         counter+=1
-        #if gs.to_Move=='w':
-            #Ai_Turn = True
+        if gs.to_Move==play_As and Play_Ai:
+            Ai_Turn = True
+            
         #mouse co-ordiantes on board
         mx,my = pg.mouse.get_pos()
         click = False
         
-
+        #CHECK for WIN or DRAW
+        if len(validmoves)==0 :
+            win="White Won!"
+            if gs.to_Move=="w":
+                win = "Black Won!"
+            if not gs.getCheck():
+                win="Stalemate!"
+                
+            choice=ctypes.windll.user32.MessageBoxW(0, "Game Finished: "+win+"\n\nPress OK for Main Menu or Press CANCEL to UNDO last move", "Game Ended:"+win, 1)
+            
+            if choice == 1:
+                main_Menu()
+            elif choice == 2:
+                gs.undo_Move()
+                validmoves=gs.getValidMoves()
+            
+            print(gs.Board2Fen())
+            
 
         if Ai_Turn:
             ntp={0:'B',1:'R',2:'Q',3:'N'}
@@ -436,8 +456,14 @@ def main_Menu():
     SHOW_MOVES = False
     click= False
     WIDTH=HEIGHT=560
+    ai = False
+    pa=False
+    
     while LAUNCH == True:
-        
+        if pa :
+            play_As = "w"
+        else:
+            play_As = "b" 
         #INITIALIZE the display
         pg.display.set_caption('MAIN MENU')
         settings_sc =  pg.display.set_mode((WIDTH+20,HEIGHT+20+20))
@@ -495,13 +521,40 @@ def main_Menu():
         textRect560.center = (WIDTH//2+42.5+2,160+HEIGHT//6+button[1]/2+60)
         settings_sc.blit(text560, textRect560)
 
-        #WIDTH = HEIGHT = 560
+        #BUTTONS FOR GAME SETTINGS
+        button_Ai= pg.Rect(WIDTH//2-button[0]/2-65,5*HEIGHT//6-button[1]/2-40,120,40)
+        color="red"
+        if ai:
+            color="green"
+        pg.draw.rect(settings_sc,color,button_Ai)
+        text = font.render("Play against AI", True, 'white')
+        textRect = text.get_rect()
+        textRect.center = (WIDTH//2-65,5*HEIGHT//6-40)
+        settings_sc.blit(text, textRect)   
+        
+        if ai:
+            button_Pl_As= pg.Rect(WIDTH//2-button[0]/2+65,5*HEIGHT//6-button[1]/2-40,120,40)
+            txt="Play as White"
+            color="white"
+            ct="black"
+            if pa:
+                color="black"
+                ct="white"
+                txt="Play as Black"
+            pg.draw.rect(settings_sc,color,button_Pl_As)
+            text = font.render(txt, True, ct)
+            textRect = text.get_rect()
+            textRect.center = (WIDTH//2+65,5*HEIGHT//6-40)
+            settings_sc.blit(text, textRect)   
+            if button_Pl_As.collidepoint((mx,my)) and click:
+                pa=not pa
+
         #BUTTON_4~Quit Button 
-        button_4 = pg.Rect(WIDTH//2-button[0]/2,5*HEIGHT//6-button[1]/2,120,40)
+        button_4 = pg.Rect(WIDTH//2-button[0]/2,5*HEIGHT//6-button[1]/2+40,120,40)
         pg.draw.rect(settings_sc,'red',button_4)
         text = font.render("QUIT", True, 'white')
         textRect = text.get_rect()
-        textRect.center = (WIDTH//2,5*HEIGHT//6)
+        textRect.center = (WIDTH//2,5*HEIGHT//6+40)
         settings_sc.blit(text, textRect)
 
         ###...............
@@ -512,7 +565,7 @@ def main_Menu():
         if button_1.collidepoint((mx,my)) :
             if click:
             
-                mainGame(START_POS,SHOW_MOVES)
+                mainGame(START_POS,SHOW_MOVES,ai,play_As)
         #Set the input string as the starting positoin     
         if button_2.collidepoint((mx,my)) :
             if click:
@@ -529,7 +582,11 @@ def main_Menu():
             WIDTH=HEIGHT=720
         if button_Size560.collidepoint((mx,my)) and click:
             WIDTH=HEIGHT=560
+        if button_Ai.collidepoint((mx,my)) and click:
+            ai=not ai
+       
         click = False
+        
         
         
         for e in pg.event.get():

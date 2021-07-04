@@ -3,8 +3,8 @@ import random
 import copy
 import time
 
-#start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-start_Fen="r3k2r/Pppp1ppp/1b3nbN/nP6/BBPPP3/4qN2/Pp4PP/R2Q1RK1 w kq - 1 2"
+start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#start_Fen="r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 #rnbq1bnr/pppp1ppp/8/6P1/3kp2R/8/PPPPPPBP/RNBQK1N1 w Q - 0 1
 #start_Fen="rnbq1bnr/pppp1ppp/8/6P1/2k1p2R/2P5/PP1PPPBP/RNBQK1N1 w Q - 1 2"
 def to_piece(ch):
@@ -116,18 +116,22 @@ class GameState():
         self.ck= False
         self.cQ= False
         self.cq = False
+        self.wkf=[]
+        self.bkf=[]
         self.rookcap=[]
         self.en_Pc = 0
         self.move_N = 0
         self.enPcl =[]
         self.castlingfilter=""
-        self.king_move_n=(0,0)
+        self.king_move_n=(-1,-1)
         self.c=0
         self.cl_m=[]
         self.inCheck = False
         self.checks = []
         self.pins = []
         self.notKing= []
+        
+        self.win_Con=""
 
         if "K" in self.castling:
             self.cK= True
@@ -162,7 +166,6 @@ class GameState():
     def make_Move(self,moveSTR):
         move=Move( ( (int(moveSTR[2]),int(moveSTR[3])) , (int(moveSTR[4]),int(moveSTR[5]))),self.board )
 
-        c_Func={"k":self.ck,"K":self.cK,"q":self.cq,"Q":self.cQ}
         self.move_N+=1
        
         self.backup_en_passant.append(self.en_Passant)
@@ -179,46 +182,30 @@ class GameState():
                 c_r=0
             if kq[0] in self.castling and move.st_row == c_r and move.st_col == 7:
                 self.castling= self.castling.replace(kq[0],"")
-                """
-                if kq[0] == "K":
-                     self.cK = False
-                else:
-                    self.ck = False
-                    """
                 self.castlingfilter+=kq[0]
                 self.cl_m.append(self.move_N)
             if kq[1] in self.castling and move.st_row == c_r and move.st_col == 0:
                 self.castling= self.castling.replace(kq[1],"")
                 self.castlingfilter+=kq[1]
-                """
-                if kq[1] == "Q":
-                     self.cQ = False
-                else:
-                    self.cq = False
-                """
                 self.cl_m.append(self.move_N)
         if move.piece_cap[1] == 'R':
             cr=move.end_row
             cc = move.end_col
             if move.piece_moved[0] == "b" and cr ==7 and (cc==7 or cc==0 ) :
                 if "K" in self.castling and cc==7:
-                    #self.cK = False
                     self.castling= self.castling.replace("K","")
                     self.castlingfilter+="K"
                     self.rookcap.append(self.move_N)
                 if "Q" in self.castling and cc==0:
-                    #self.cQ = False
                     self.castlingfilter+="Q"
                     self.castling= self.castling.replace("Q","")
                     self.rookcap.append(self.move_N)
             if move.piece_moved[0] == "w" and cr ==0 and (cc==7 or cc==0 ) :
                 if "k" in self.castling and cc==7:
-                    #self.ck = False
                     self.castling= self.castling.replace("k","")
                     self.castlingfilter+="k"
                     self.rookcap.append(self.move_N)
-                if "q" in self.castling and cc==0:
-                    #self.cq = False            
+                if "q" in self.castling and cc==0:           
                     self.castling= self.castling.replace("q","")
                     self.castlingfilter+="q"
                     self.rookcap.append(self.move_N)
@@ -236,11 +223,10 @@ class GameState():
                 row=0
                 kq=kq.lower()
                 id = 1
-            if self.king_move_n[id]==0 and move.st_row == row :
-                if kpos:
-                    self.king_move_n=(self.move_N,self.king_move_n[1])
-                else:
-                    self.king_move_n=(self.king_move_n[0],self.move_N)
+            if len(self.wkf)==0 and kpos:
+                self.wkf.append(self.move_N)
+            if len(self.bkf)== 0 and not kpos:
+                self.bkf.append(self.move_N)
 
             if kq[0] in self.castling and move.end_row== row and move.end_col==6 and self.board[move.st_row ][move.end_col+1] == rook: 
                 self.board[move.st_row ][move.st_col]= "em"
@@ -313,7 +299,7 @@ class GameState():
 
 
             #UNDO CASTLING
-            if move.piece_moved[1] == "K" and move.st_col == 4:
+            if move.piece_moved[1] == "K" and move.st_col == 4 and ((move.piece_moved[0] == "w" and self.wkf[0] == self.move_N) or (move.piece_moved[0] == "b" and self.bkf[0] == self.move_N) ):
                 row=0
                 strs=["K","Q"]
                 k_col=""
@@ -324,12 +310,14 @@ class GameState():
                     strs=strs
                     k_col="wK"
                     r_col="wR"
+                    self.wkf.pop() 
                 else:
                     row=0
                     strs[0]=strs[0].lower()
                     strs[1]=strs[1].lower()
                     k_col="bK"
                     r_col="bR"
+                    self.bkf.pop() 
                 r_s_c=0
                 r_e_c=0
                 k_e_c=0
@@ -366,18 +354,16 @@ class GameState():
                         
                         self.board[move.st_row ][move.st_col]=move.piece_moved
                         self.board[move.end_row ][move.end_col]=move.piece_cap
-                        if strs[0] == "K" and self.king_move_n[0] == self.move_N:
+                        if move.piece_moved[0] == "w":
                             if "K" not in self.castlingfilter:
                                 self.castling=strs[0]+self.castling
                             if "Q" not in self.castlingfilter:
                                 self.castling=strs[1]+self.castling 
-                            self.king_move_n=(0,self.king_move_n[1])    
-                        elif strs[0] == "k" and self.king_move_n[1] == self.move_N:
+                        else:# move.piece_moved[0] == "b" :
                             if "k" not in self.castlingfilter:
                                 self.castling=strs[0]+self.castling
                             if "q" not in self.castlingfilter:
-                                self.castling=strs[1]+self.castling
-                            self.king_move_n=(self.king_move_n[0],0)        
+                                self.castling=strs[1]+self.castling  
 
             #UNDO En-Passant
             if self.en_Pc>0 and self.move_N == self.enPcl[len(self.enPcl)-1]:
@@ -552,6 +538,9 @@ class GameState():
                             self.validmoves.append(m)
                     
             else:
+              enpd=-1
+              if aCol =="b":
+                    enpd=1
               for m in moves:
                     if m[1] == "K":
                         self.validmoves.append(m)
@@ -561,7 +550,9 @@ class GameState():
                             if a == (int(m[4]),int(m[5])) and m[1]!="K":
                                     
                                     self.validmoves.append(m)
-                        
+                    # En passant to kill checking pawn
+                    if  ( (int(m[4])-enpd,int(m[5])) in self.checks ) and  ((Move.Num2LETR[int(m[5])+1]+str((8-int(m[4])+ enpd  ))) in self.en_Passant) and m[1]=="P" :
+                        self.validmoves.append(m)
         
         
         return self.validmoves
@@ -607,7 +598,7 @@ class GameState():
                             if ppin == ():
                                 
                                 inCheck = True
-                                
+                                checks.append((r,c))
                                                               
                                 tmp.append((r,c))
                                 avals+=tmp
@@ -977,23 +968,23 @@ class GameState():
             self.make_Move(t)
             positions +=self.getPositions(depth-1,"",positions)
             self.undo_Move()
+            #print((4-depth)*"|",self.Board2Fen())
             
         return positions 
 
 gs= GameState(start_Fen)
-depth=4
+depth=1
 start=time.time()
-tm=gs.getValidMoves()
+
 sum=0
-
+tm=gs.getValidMoves()
 #test=gs.getPositions(depth,"",0)
-
 for t in tm:
         
         move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),gs.board)
         gs.make_Move(t)
        
-        
+            
         s=gs.getPositions(depth-1,"",0)
         sum+=s
         gs.undo_Move()
@@ -1009,7 +1000,7 @@ for t in tm:
 end=time.time()
 print(end-start)
 print(sum)#,test)
-print(gs.Board2Fen())
+print("FIN",gs.Board2Fen())
 #a,b,c,d,e,f,g=gs.getCheckPin()
 #print("a",a,"b",b,"c",c,"d",d,"e",e,"f",f,"g",g)
 #m=gs.getValidMoves()
