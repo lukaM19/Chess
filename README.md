@@ -7,11 +7,20 @@ Chess engine project
 - [x]  FEN2Board interpreter, Board2FEN export
 - [x]  2-player mode
 - [x]  Movable Pieces, Undo Moves, Move Order maintained, drag animation, add sound effect for moving
-- [ ]  
+ - [x] Pawn,Rook,Knight,Bishop,King,Queen Move Rules added, Can generate all possible moves for the position
+ - [X] pawn promotion, castling(&undo), enpassant(& undo)
+    * - [x] Castling and undo 
+    * - [x] Pawn promotion and undo  
+    * - [x] En passant and undo <s>(Need to double check for bugs during undo)</s>     
+ - [x] Checks 
+ - [x] Checkmate, stalemate
+ - [x] Pinned pieces, discovered checks 
 
 ## Done-ish
 
 * add Comments in code, clear up useless code and variables
+ > - [x] MainGame commented and cleared
+ > - [ ] Engine partially
 
 * GUI??
  > - [x] Menu skeleton 
@@ -19,17 +28,7 @@ Chess engine project
  > - [x] Custom starting positions
  > - [x] select Bot/2-player mode
  > - [ ] probably will need to set depth from menu in future
- > - [ ] Change between 560/720 modes
-
-* Game Rules 
->1. - [x] Pawn,Rook,Knight,Bishop,King,Queen Move Rules added, Can generate all possible moves for the position
->2. - [X] <s>pawn promotion, castling(&undo), enpassant(& undo)</s>
->    * - [x] Castling and undo 
->    * - [x] Pawn promotion and undo  
->    * - [x] En passant and undo <s>(Need to double check for bugs during undo)</s>     
->3. - [x] Checks 
->4. - [x] Checkmate, stalemate
->5. - [x] Pinned pieces, discovered checks
+ > - [x] Change between 560/720 modes
 
 ## To-Do
 * Position Evaluation&nbsp;\\
