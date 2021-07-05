@@ -1,6 +1,10 @@
 # Chess
 Chess engine project
 
+Currently Valid Move Generation is done, it correctly generates moves for all positions given in [Perft Results](https://www.chessprogramming.org/Perft_Results)[<sup>[4]</sup>](#**Resources**), up to depths with severeal million notdes, further depths have not been tested but should also work.Thus 1v1 is completely playabke as of 04/07/2021.
+
+I will soon start working on the AI.
+
 ## Done
 
 - [x]  Board
@@ -45,12 +49,14 @@ Chess engine project
 * <s>Pawns check to their back right</s>
 
 # **Resources**
-> https://www.pygame.org/docs/search.html?q=
+> [1] https://www.pygame.org/docs/search.html?q=
 > 
-> https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+> [2] https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 > 
-> https://www.chessprogramming.org/Main_Page
+> [3] https://www.chessprogramming.org/Main_Page
 > 
-> https://stackoverflow.com/questions/1110439/chess-optimizations
+> [4] https://www.chessprogramming.org/Perft_Results
+>
+> [5] https://stackoverflow.com/questions/1110439/chess-optimizations
 > 
 
