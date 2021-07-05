@@ -1,7 +1,7 @@
 # Chess
 Chess engine project
 
-Currently Valid Move Generation is done, it correctly generates moves for all positions given in [Perft Results](https://www.chessprogramming.org/Perft_Results)[<sup>[4]</sup>](#**Resources**), up to depths with severeal million notdes, further depths have not been tested but should also work.Thus 1v1 is completely playabke as of 04/07/2021.
+Currently Valid Move Generation is done, it correctly generates moves for all positions given in [Perft Results](https://www.chessprogramming.org/Perft_Results)[<sup>[4]</sup>](#Resources), up to depths with severeal million notdes, further depths have not been tested but should also work.Thus 1v1 is completely playabke as of 04/07/2021.
 
 I will soon start working on the AI.
 
