@@ -1,6 +1,6 @@
 import pygame as pg
 import sys
-from Chess import Engine
+import Engine
 import time
 import random
 import ctypes  
@@ -8,48 +8,44 @@ from tkinter import Tk
 
 
 pg.init()
-
 #Global Variables
-WIDTH = HEIGHT =560
 DIMENSION = 8
-SQ= HEIGHT//DIMENSION
-MAX_FPS = 60
+edge_pix=20
 IMAGES = {}
 LETR = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h' }
 COLOR = {'wR':'w','wN':'w','wB':'w','wQ':'w','wK':'w','wP':'w','bR':'b','bN':'b','bB':'b','bQ':'b','bK':'b','bP':'b'}
-click = False
-edge_pix=20
-LAUNCH = True
-font = pg.font.Font('freesansbold.ttf', 14)
-if WIDTH== 560:
-    font = pg.font.Font('freesansbold.ttf', 12)
-
+MAX_FPS = 60
 #Loading Pieces
-def loadPieces():
+def loadPieces(SQ):
     pieces = ['wR','wN','wB','wQ','wK','wP','bR','bN','bB','bQ','bK','bP']
     for piece in pieces:
-        IMAGES[piece] =pg.transform.scale( pg.image.load("Chess/images_HR/"+piece+".png"),(SQ-int(SQ/4),SQ-int(SQ/4)) )
+        IMAGES[piece] =pg.transform.scale( pg.image.load("C:/Users/Luka/Documents/python/Chess/images_HR/"+piece+".png"),(SQ-int(SQ/4),SQ-int(SQ/4)) )
 
 #Main Game Process
-def mainGame(START_POS,SHOW_MOVES,ai,play_As):
+def mainGame(START_POS,SHOW_MOVES,WID,ai,play_As):
+ #Define variables
+    WIDTH = HEIGHT =WID
+    SQ= HEIGHT//DIMENSION
+    click = False
+    font = pg.font.Font('freesansbold.ttf', 14)
+    if WIDTH== 560:
+        font = pg.font.Font('freesansbold.ttf', 12)
 
-
-
-    #Draw Game Window
+ #Draw Game Window
     pg.display.set_caption('Play Game')
     start=time.time()
     screen = pg.display.set_mode((WIDTH+edge_pix,HEIGHT+2*edge_pix))
     #screen_bl=pg.transform.rotate(screen, 180), (0, 0)
     clock=pg.time.Clock()
     screen.fill(pg.Color("white"))
-
+ #variables
     #load game position, Pieces and load images for chess pieces, Load Valid moves
     gs = Engine.GameState(START_POS)
-    loadPieces()
+    loadPieces(SQ)
     validmoves=gs.getValidMoves()
     
     #variables for making moves, drag animation
-    move_sound = pg.mixer.Sound("Chess/move.wav")
+    move_sound = pg.mixer.Sound("C:/Users/Luka/Documents/python/Chess/move.wav")
     running=True
     selected=()
     sel_list=[]
@@ -78,14 +74,14 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
     mark_d=0
     mark_md=0
     #Promotion handlers
-    promotion_Move_w= False
+    promotion_Move_w = False
     promotion_Move_b = False
     #GAMEMODE VARIABLES
     Play_Ai=ai
     Ai_Turn = False
     Ai_Color = play_As
 
-    #While game instance is open
+ #While game instance is open
     while running:
         counter+=1
         if gs.to_Move==play_As and Play_Ai:
@@ -96,11 +92,13 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
         click = False
         
         #CHECK for WIN or DRAW
-        if len(validmoves)==0 :
+        pprom= (promotion_Move_w or promotion_Move_b)
+        if len(validmoves)==0 and not pprom:
             win="White Won!"
+            
             if gs.to_Move=="w":
                 win = "Black Won!"
-            if not gs.getCheck():
+            if not gs.getCheck() :
                 win="Stalemate!"
                 
             choice=ctypes.windll.user32.MessageBoxW(0, "Game Finished: "+win+"\n\nPress OK for Main Menu or Press CANCEL to UNDO last move", "Game Ended:"+win, 1)
@@ -109,9 +107,11 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
                 main_Menu()
             elif choice == 2:
                 gs.undo_Move()
+                if ai:
+                    gs.undo_Move()
                 validmoves=gs.getValidMoves()
             
-            print(gs.Board2Fen())
+            
             
 
         if Ai_Turn:
@@ -233,7 +233,7 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
             #Highlight last square from and to which  the move was made, Bound set to avoid the bug of pieces showing up on the side of the board
             if hold  and (mx>30 and my<HEIGHT):
                 highB= True
-            #UPDATE Valid moves for new board position after a move was amde
+            #UPDATE Valid moves for new board position after a move was made
             if move_made and mark_d<mark_md:
                 validmoves=gs.getValidMoves()  
                 mark_d=counter
@@ -241,7 +241,7 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
             
               
             #update the display   
-        drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES)
+        drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES,SQ,WIDTH,HEIGHT,font)
         highB = False
         #Handle pawn promotion
         if promotion_Move_w:
@@ -345,6 +345,8 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
                 
                 move=Engine.Move(last_move,gs.board)
                 gs.undo_Move()
+                if ai:
+                    gs.undo_Move()
                 pg.mixer.Sound.play(move_sound)
                 pg.mixer.music.stop()
                 validmoves=gs.getValidMoves()  
@@ -386,19 +388,18 @@ def mainGame(START_POS,SHOW_MOVES,ai,play_As):
     print('time taken:',start-end)
 
 
-
 #Function for Drawing all parts of the game: Board, Pieces, Highlights    
-def drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES):
+def drawGame(screen,gs,high_sur, gh_col,bh_col,h_loc,highB,move_made,last_move,pos,t,tr,validmoves,selected,cir,SHOW_MOVES,SQ,WIDTH,HEIGHT,font):
     if gs.to_Move == 'w':
         screen.fill(pg.Color("white"))
     else:
         screen.fill(pg.Color((82,88,84)))
-    drawBoard(screen)
-    drawPieces(screen,gs.board)
-    drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,gs.board,selected,cir,SHOW_MOVES)
+    drawBoard(screen,SQ,WIDTH,HEIGHT,font)
+    drawPieces(screen,gs.board,SQ,WIDTH,HEIGHT)
+    drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,gs.board,selected,cir,SHOW_MOVES,SQ,WIDTH,HEIGHT)
 
 #Function for drawing highlights on the board   
-def drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,board,selected,cir,SHOW_MOVES):
+def drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_move,pos,t,tr,validmoves,board,selected,cir,SHOW_MOVES,SQ,WIDTH,HEIGHT):
     if highB:
         tr.center = pos
         screen.blit(t,tr)
@@ -419,8 +420,9 @@ def drawHighlights(high_sur, gh_col,bh_col,h_loc,screen,highB,move_made,last_mov
         pg.draw.rect(high_sur, bh_col, high_sur.get_rect())
         screen.blit(high_sur,(last_move[0][1]*SQ+edge_pix,last_move[0][0]*SQ)) 
         screen.blit(high_sur,(last_move[1][1]*SQ+edge_pix,last_move[1][0]*SQ))
+
 #Function for Drawing the board, also the File, Rank indexes on the sides    
-def drawBoard(screen):
+def drawBoard(screen,SQ,WIDTH,HEIGHT,font):
     colors=[pg.Color(222,184,135),pg.Color(139,69,19)]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
@@ -439,16 +441,15 @@ def drawBoard(screen):
                 screen.blit(text, textRect)
     
 # Draw the pieces on the screen 
-def drawPieces(screen,board):
+def drawPieces(screen,board,SQ,WIDTH,HEIGHT):
      for r in range(DIMENSION):
         for c in range(DIMENSION):
             p= board[r][c]
             if p != "em": 
                 screen.blit(IMAGES[p],pg.Rect(c*SQ+SQ/8+edge_pix,r*SQ+SQ//8+SQ//16,SQ,SQ))
 
-
 def main_Menu():
-    pg.init()
+   #variables
     input = ''
     #Bool variable for indicating if we should accept input from keyboard for the FEN String
     ST_INPUT = False
@@ -458,7 +459,11 @@ def main_Menu():
     WIDTH=HEIGHT=560
     ai = False
     pa=False
-    
+    LAUNCH = True
+    font = pg.font.Font('freesansbold.ttf', 14)
+    if WIDTH== 560:
+        font = pg.font.Font('freesansbold.ttf', 12)
+   #main loop
     while LAUNCH == True:
         if pa :
             play_As = "w"
@@ -479,59 +484,61 @@ def main_Menu():
         
         
         ###Set up buttons .........
-        #BUTTON_1~PLAY
+       #BUTTON_1~PLAY
         button_1 = pg.Rect(WIDTH//2-button[0]/2,HEIGHT//6-button[1]/2,120,40)
-        pg.draw.rect(settings_sc,'black',button_1)
+        pg.draw.rect(settings_sc,'black',button_1,20,5)
         text = font.render("PLAY", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2,HEIGHT//6)
         settings_sc.blit(text, textRect)
-        #BUTTON_2/Returnbutton~ Confirm Starting FEN
+        
+       #BUTTON_2/Returnbutton~ Confirm Starting FEN
         button_2 = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+60,170,40)
-        pg.draw.rect(settings_sc,'black',button_2)
+        pg.draw.rect(settings_sc,'black',button_2,20,3)
         text = font.render("Set Starting Position", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2,100+HEIGHT//6+button[1]/2)
         settings_sc.blit(text, textRect)
 
-        #BUTTON HIGHLIGHT SETTING
+       #BUTTON HIGHLIGHT SETTING
         button_5 = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+120,170,40)
         color=""
         if SHOW_MOVES:
             color='green'
         else:
             color='red'
-        pg.draw.rect(settings_sc,color,button_5)
+        pg.draw.rect(settings_sc,color,button_5,20,3)
         text = font.render("Higlight available moves", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2,160+HEIGHT//6+button[1]/2)
         settings_sc.blit(text, textRect)
 
-        #BUTTON_3~SET SIZE
+       
+       #BUTTON_3~SET SIZE
         button_Size720 =  pg.Rect(WIDTH//2-85-2, 40+HEIGHT//6+button[1]/2+160,85,40)
-        pg.draw.rect(settings_sc,"black",button_Size720)
+        pg.draw.rect(settings_sc,"black",button_Size720,20,3)
         text720 = font.render("720", True, 'white')
         textRect720 = text720.get_rect()
         textRect720.center = (WIDTH//2-42.5-2,160+HEIGHT//6+button[1]/2+60)
         settings_sc.blit(text720, textRect720)
         button_Size560 =  pg.Rect(WIDTH//2+2, 40+HEIGHT//6+button[1]/2+160,85,40)
-        pg.draw.rect(settings_sc,"black",button_Size560)
+        pg.draw.rect(settings_sc,"black",button_Size560,20,3)
         text560 = font.render("560", True, 'white')
         textRect560 = text560.get_rect()
         textRect560.center = (WIDTH//2+42.5+2,160+HEIGHT//6+button[1]/2+60)
         settings_sc.blit(text560, textRect560)
 
-        #BUTTONS FOR GAME SETTINGS
+       #BUTTONS FOR GAME SETTINGS
         button_Ai= pg.Rect(WIDTH//2-button[0]/2-65,5*HEIGHT//6-button[1]/2-40,120,40)
         color="red"
         if ai:
             color="green"
-        pg.draw.rect(settings_sc,color,button_Ai)
+        pg.draw.rect(settings_sc,color,button_Ai,20,3)
         text = font.render("Play against AI", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2-65,5*HEIGHT//6-40)
         settings_sc.blit(text, textRect)   
-        
+        #Choose ai color
         if ai:
             button_Pl_As= pg.Rect(WIDTH//2-button[0]/2+65,5*HEIGHT//6-button[1]/2-40,120,40)
             txt="Play as White"
@@ -541,7 +548,7 @@ def main_Menu():
                 color="black"
                 ct="white"
                 txt="Play as Black"
-            pg.draw.rect(settings_sc,color,button_Pl_As)
+            pg.draw.rect(settings_sc,color,button_Pl_As,20,3)
             text = font.render(txt, True, ct)
             textRect = text.get_rect()
             textRect.center = (WIDTH//2+65,5*HEIGHT//6-40)
@@ -549,23 +556,23 @@ def main_Menu():
             if button_Pl_As.collidepoint((mx,my)) and click:
                 pa=not pa
 
-        #BUTTON_4~Quit Button 
+       #BUTTON_4~Quit Button 
         button_4 = pg.Rect(WIDTH//2-button[0]/2,5*HEIGHT//6-button[1]/2+40,120,40)
-        pg.draw.rect(settings_sc,'red',button_4)
+        pg.draw.rect(settings_sc,'red',button_4,20,3)
         text = font.render("QUIT", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2,5*HEIGHT//6+40)
         settings_sc.blit(text, textRect)
 
         ###...............
-        ###Intercations..........
+       ###Intercations..........
         ###Mouse position
         mx,my = pg.mouse.get_pos()
         #Play~ Launch the game
         if button_1.collidepoint((mx,my)) :
             if click:
             
-                mainGame(START_POS,SHOW_MOVES,ai,play_As)
+                mainGame(START_POS,SHOW_MOVES,WIDTH,ai,play_As)
         #Set the input string as the starting positoin     
         if button_2.collidepoint((mx,my)) :
             if click:
@@ -575,16 +582,19 @@ def main_Menu():
             if click:
                 pg.quit()
                 sys.exit()
+        #CHOOSE IF YOU WANT TO SHOW AVAILABLE MOVES
         if button_5.collidepoint((mx,my)) :
             if click:
                 SHOW_MOVES = not SHOW_MOVES
+        #Set window size to 720 or 560
         if button_Size720.collidepoint((mx,my)) and click:
             WIDTH=HEIGHT=720
         if button_Size560.collidepoint((mx,my)) and click:
             WIDTH=HEIGHT=560
+        #Choose if you want to play against AI
         if button_Ai.collidepoint((mx,my)) and click:
             ai=not ai
-       
+       #events
         click = False
         
         
@@ -622,9 +632,9 @@ def main_Menu():
             inp_box = pg.Rect(20,20+HEIGHT//6+button[1]/2,174,40)
             #Indicate by colors if we are currently accepting keyboard input for FEN
             if ST_INPUT:
-                pg.draw.rect(settings_sc,'blue',inp_box)
+                pg.draw.rect(settings_sc,'blue',inp_box,20,3)
             else:
-                pg.draw.rect(settings_sc,'navy',inp_box)
+                pg.draw.rect(settings_sc,'navy',inp_box,20,3)
             I_box_text=font_i.render("Put custom position FEN here:", True, 'green')
             settings_sc.blit(I_box_text, (inp_box.x, inp_box.y+12))
             #Change input box width if needed
@@ -639,8 +649,6 @@ def main_Menu():
 
             pg.display.flip()
             clock.tick(60)
-        
-       
-    
+          
 if __name__ == "__main__":
     main_Menu()

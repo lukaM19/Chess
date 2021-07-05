@@ -459,37 +459,6 @@ class GameState():
         #print(self.moves,"PAWNED")
         return self.moves
 
-#INEFFICIENT AND BAD ALGO
-    def getVaalidMoves(self):
-        self.valid_Moves=[]
-        moves=self.getAllMoves()
-        sc=self.to_Move
-        t=0
-        t_b=GameState(self.Board2Fen())
-        
-        for m in moves:
-            t+=1
-            t_move= Move(((int(m[2]),int(m[3])),(int(m[4]),int(m[5]))),t_b.board)
-            t_b.make_Move(t_move)
-            
-            op_moves= t_b.getAllMoves()
-            
-            k=0
-            for p in op_moves:
-                if t_b.board[int(p[4])][int(p[5])] == sc+"K":
-                    
-                    k+=1
-                    break
-            
-            
-            if k==0:
-                self.valid_Moves.append(m)
-            t_b.undo_Move()
-            #self.undo_Move()
-       
-        self.c=0 
-        return self.valid_Moves
-
 #GOOD ALGO    
     def getValidMoves(self):
         moves=self.getAllMoves()
@@ -499,7 +468,7 @@ class GameState():
         self.whP=[]
         pd=""
 
-        self.inCheck,self.checks,self.pins,available,pin_dir,self.whP=self.getCheckPin()
+        self.inCheck,self.checks,self.pins,available,pin_dir,self.whP=self.get_Checks_Pins()
         #print(self.inCheck,self.checks,self.pins,self.whP)
         aCol='w'
         kp=0
@@ -542,8 +511,10 @@ class GameState():
               if aCol =="b":
                     enpd=1
               for m in moves:
+                    #Use all king moves
                     if m[1] == "K":
                         self.validmoves.append(m)
+                    #All move by pieces which are not pinned  and block/kill the attacking piece(stored in available)
                     elif (int(m[2]),int(m[3]))  not in self.pins :
                         
                         for index,a in enumerate(available):
@@ -556,7 +527,7 @@ class GameState():
         
         
         return self.validmoves
-    def getCheckPin(self):
+    def get_Checks_Pins(self):
         inCheck= False
         pins=[]
         checks=[]
@@ -955,6 +926,36 @@ class GameState():
         FEN+=str(self.n_Fmove)
         return FEN+" "+str(self.cK) +str(self.ck)+str(self.cQ)+str(self.cq) +" "+self.castlingfilter
 
+#INEFFICIENT AND BAD ALGO NOT BEING USED HERE FOR TESTING ONLY
+    def getVaalidMoves(self):
+        self.valid_Moves=[]
+        moves=self.getAllMoves()
+        sc=self.to_Move
+        t=0
+        t_b=GameState(self.Board2Fen())
+        
+        for m in moves:
+            t+=1
+            t_move= Move(((int(m[2]),int(m[3])),(int(m[4]),int(m[5]))),t_b.board)
+            t_b.make_Move(t_move)
+            
+            op_moves= t_b.getAllMoves()
+            
+            k=0
+            for p in op_moves:
+                if t_b.board[int(p[4])][int(p[5])] == sc+"K":
+                    
+                    k+=1
+                    break
+            
+            
+            if k==0:
+                self.valid_Moves.append(m)
+            t_b.undo_Move()
+            #self.undo_Move()
+       
+        self.c=0 
+        return self.valid_Moves
 #Temp test Methods
     def getPositions(self,depth,test,pos):
         if depth == 0 :
@@ -972,35 +973,38 @@ class GameState():
             
         return positions 
 
-gs= GameState(start_Fen)
-depth=1
-start=time.time()
+#PERFT TESTING
+    """
+    gs= GameState(start_Fen)
+    depth=1
+    start=time.time()
 
-sum=0
-tm=gs.getValidMoves()
-#test=gs.getPositions(depth,"",0)
-for t in tm:
-        
-        move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),gs.board)
-        gs.make_Move(t)
-       
+    sum=0
+    tm=gs.getValidMoves()
+    #test=gs.getPositions(depth,"",0)
+    for t in tm:
             
-        s=gs.getPositions(depth-1,"",0)
-        sum+=s
-        gs.undo_Move()
+            move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),gs.board)
+            gs.make_Move(t)
         
-        if len(t)==7:
-            print(move.inChessNotation()+t[6]+":",s)
-        else:
-            print(move.inChessNotation()+":",s)   
-        print( gs.Board2Fen())# != start_Fen:
-            #break
+                
+            s=gs.getPositions(depth-1,"",0)
+            sum+=s
+            gs.undo_Move()
+            
+            if len(t)==7:
+                print(move.inChessNotation()+t[6]+":",s)
+            else:
+                print(move.inChessNotation()+":",s)   
+            print( gs.Board2Fen())# != start_Fen:
+                #break
 
 
-end=time.time()
-print(end-start)
-print(sum)#,test)
-print("FIN",gs.Board2Fen())
-#a,b,c,d,e,f,g=gs.getCheckPin()
-#print("a",a,"b",b,"c",c,"d",d,"e",e,"f",f,"g",g)
-#m=gs.getValidMoves()
+    end=time.time()
+    print(end-start)
+    print(sum)#,test)
+    print("FIN",gs.Board2Fen())
+    """
+    #a,b,c,d,e,f,g=gs.getCheckPin()
+    #print("a",a,"b",b,"c",c,"d",d,"e",e,"f",f,"g",g)
+    #m=gs.getValidMoves()
