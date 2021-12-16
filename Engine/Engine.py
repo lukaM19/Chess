@@ -3,10 +3,72 @@ import random
 import copy
 import time
 
-start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#start_Fen="r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
+#start_Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+start_Fen="r3k2r/Pppp1ppp/1b3nbN/nPP5/BB2P3/q4N2/Pp1P2PP/R2Q1RK1 b kq - 0 1"
 #rnbq1bnr/pppp1ppp/8/6P1/3kp2R/8/PPPPPPBP/RNBQK1N1 w Q - 0 1
 #start_Fen="rnbq1bnr/pppp1ppp/8/6P1/2k1p2R/2P5/PP1PPPBP/RNBQK1N1 w Q - 1 2"
+points={"wP":100,"wN":320,"wB":330,"wR":500,"wQ":900,"bP":100,"bN":320,"bB":330,"bR":500,"bQ":900,"wK":0,"bK":0,"em":0}
+#
+wrook_Heatmap=[  [0,  0,  0,  0,  0,  0,  0,  0],
+  [5, 10, 10, 10, 10, 10, 10,  5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [ 0,  0,  0,  5,  5,  0,  0,  0]]
+brook_Heatmap= [[0, 0, 0, 5, 5, 0, 0, 0],
+ [-5, 0, 0, 0, 0, 0, 0, -5], [-5, 0, 0, 0, 0, 0, 0, -5], [-5, 0, 0, 0, 0, 0, 0, -5], [-5, 0, 0, 0, 0, 0, 0, -5], [-5, 0, 0, 0, 0, 0, 0, -5], [5, 10, 10, 10, 10, 10, 10, 5], [0, 0, 0, 0, 0, 0, 0, 0]]  
+queen_Heatmap=[[-20,-10,-10, -5, -5,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5,  5,  5,  5,  0,-10],
+    [ -5,  0,  5,  5,  5,  5,  0, -5],
+    [ -5,  0,  5,  5,  5,  5,  0, -5],
+    [-10,  5,  5,  5,  5,  5,  0,-10],
+    [-10,  0,  5,  0,  0,  0,  0,-10],
+    [-20,-10,-10, -5, -5,-10,-10,-20]]
+wking_Heatmap= [ [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-20,-30,-30,-40,-40,-30,-30,-20],
+    [-10,-20,-20,-20,-20,-20,-20,-10],
+    [ 20, 20,  0,  0,  0,  0, 20, 20],
+    [ 20, 30, 10,  0,  0, 10, 30, 20]]
+bking_Heatmap= [
+    [20, 30, 10, 0, 0, 10, 30, 20], [20, 20, 0, 0, 0, 0, 20, 20], [-10, -20, -20, -20, -20, -20, -20, -10], [-20, -30, -30, -40, -40, -30, -30, -20], [-30, -40, -40, -50, -50, -40, -40, -30], [-30, -40, -40, -50, -50, -40, -40, -30], [-30, -40, -40, -50, -50, -40, -40, -30], [-30, -40, -40, -50, -50, -40, -40, -30]]
+wbishop_Heatmap=[[-20,-10,-10,-10,-10,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5, 10, 10,  5,  0,-10],
+    [-10,  5,  5, 10, 10,  5,  5,-10],
+    [-10,  0, 10, 10, 10, 10,  0,-10],
+    [-10, 10, 10, 10, 10, 10, 10,-10],
+    [-10,  5,  0,  0,  0,  0,  5,-10],
+    [-20,-10,-10,-10,-10,-10,-10,-20]]
+bbishop_Heatmap= [[-20, -10, -10, -10, -10, -10, -10, -20], [-10, 5, 0, 0, 0, 0, 5, -10], [-10, 10, 10, 10, 10, 10, 10, -10], [-10, 0, 
+    10, 10, 10, 10, 0, -10], [-10, 5, 5, 10, 10, 5, 5, -10], [-10, 0, 5, 10, 10, 5, 0, -10], [-10, 0, 0, 0, 0, 0, 0, -10], [-20, -10, -10, 
+    -10, -10, -10, -10, -20]]
+wknight_Heatmap=[[-50,-40,-30,-30,-30,-30,-40,-50],
+    [-40,-20,  0,  0,  0,  0,-20,-40],
+    [-30,  0, 10, 15, 15, 10,  0,-30],
+    [-30,  5, 15, 20, 20, 15,  5,-30],
+    [-30,  0, 15, 20, 20, 15,  0,-30],
+    [-30,  5, 10, 15, 15, 10,  5,-30],
+    [-40,-20,  0,  5,  5,  0,-20,-40],
+    [-50,-40,-30,-30,-30,-30,-40,-50]]
+bknight_Heatmap= [[-50, -40, -30, -30, -30, -30, -40, -50], [-40, -20, 0, 5, 5, 0, -20, -40], [-30, 5, 10, 15, 15, 10, 5, -30], [-30, 0, 15, 20, 20, 15, 0, -30], [-30, 5, 15, 20, 20, 15, 5, -30], [-30, 0, 10, 15, 15, 10, 0, -30], [-40, -20, 0, 0, 0, 0, -20, -40], [-50, 
+    -40, -30, -30, -30, -30, -40, -50]]
+wpawn_Heatmap=[[ 0,  0,  0,  0,  0,  0,  0,  0],
+    [50, 50, 50, 50, 50, 50, 50, 50],
+    [10, 10, 20, 30, 30, 20, 10, 10],
+    [5,  5, 10, 25, 25, 10,  5,  5],
+    [0,  0,  0, 20, 20,  0,  0,  0],
+    [5, -5,-10,  0,  0,-10, -5,  5],
+    [5, 10, 10,-20,-20, 10, 10,  5],
+    [0,  0,  0,  0,  0,  0,  0,  0]]
+bpawn_Heatmap= [
+    [0, 0, 0, 0, 0, 0, 0, 0], [5, 10, 10, -20, -20, 10, 10, 5], [5, -5, -10, 0, 0, -10, -5, 5], [0, 0, 0, 20, 20, 0, 0, 0], [5, 5, 10, 25, 25, 10, 5, 5], [10, 10, 20, 30, 30, 20, 10, 10], [50, 50, 50, 50, 50, 50, 50, 50], [0, 0, 0, 0, 0, 0, 0, 0]]
+
 def to_piece(ch):
     return {
         'r':"bR",
@@ -957,31 +1019,81 @@ class GameState():
         self.c=0 
         return self.valid_Moves
 #Temp test Methods
-    def getPositions(self,depth,test,pos):
+    def getPositions(self,depth,test,eval,c,tm,og):
         if depth == 0 :
-            return 1
+            m=self.getEvaluation(c)
+            if m>eval:
+                eval=m
+                test=tm
+                print(test,eval)
+            
+            return 1,test,eval
         movess=self.getValidMoves()
         positions=0
+        p=0
+
         for t in movess:
             
             #move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),self.board)
-            
+            if depth ==og:
+                tm=t
             self.make_Move(t)
-            positions +=self.getPositions(depth-1,"",positions)
+            #print(pos)
+            p,test,eval =self.getPositions(depth-1,test,eval,c,tm,og)
+            positions+=p
             self.undo_Move()
             #print((4-depth)*"|",self.Board2Fen())
             
-        return positions 
+        return positions,test,eval
+    def getEvaluation(self,col):
+            boardsum=0
+            bonus = 0
+            t={"em":0,"wP":wpawn_Heatmap,"bP":bpawn_Heatmap,"wN":wknight_Heatmap,"bN":bknight_Heatmap,"wB":wbishop_Heatmap,"bB":bbishop_Heatmap,"wR":wrook_Heatmap,"bR":brook_Heatmap,"wK":wking_Heatmap,"bK":bking_Heatmap,"wQ":queen_Heatmap,"bQ":queen_Heatmap}
+        #print(self.to_Move)
+            for r in range(len(self.board)):
+                for c in range(len(self.board[r])):
+                    temp=self.board[r][c]
+                    color=temp[0]
+                    piece=temp[1].lower()
+                    if temp!="em":
+                        bonus+=t[temp][r][c]
+                    
+                        
+                    if color==col:
+
+                        boardsum+=points[self.board[r][c]]
+                        boardsum+=bonus
+                        
+                    else:
+                        boardsum-=points[self.board[r][c]]  
+                        boardsum-=bonus  
+            #print("sum:",boardsum)
+            return boardsum
+    def changeTurn(self,c):
+        if c=="w":
+            return "b"
+        else:
+            return "w"
 
 #PERFT TESTING
-    """
-    gs= GameState(start_Fen)
-    depth=1
-    start=time.time()
-
-    sum=0
-    tm=gs.getValidMoves()
-    #test=gs.getPositions(depth,"",0)
+    
+gs= GameState(start_Fen)
+depth=1
+c=""
+c=gs.to_Move
+for i in range(depth-1):
+    c=gs.changeTurn(c)
+start=time.time()
+og=depth
+k=0
+test,st,k=gs.getPositions(depth,"",-99999,c,"",og)
+end=time.time()
+print(end-start)
+print(test,st)
+sum=0
+    #tm=gs.getValidMoves()
+"""
+    #
     for t in tm:
             
             move=Move(((int(t[2]),int(t[3])),(int(t[4]),int(t[5]))),gs.board)
@@ -1000,7 +1112,7 @@ class GameState():
                 #break
 
 
-    end=time.time()
+    
     print(end-start)
     print(sum)#,test)
     print("FIN",gs.Board2Fen())
