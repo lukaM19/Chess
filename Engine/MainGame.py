@@ -24,7 +24,7 @@ def loadPieces(SQ):
               'wP', 'bR', 'bN', 'bB', 'bQ', 'bK', 'bP']
     for piece in pieces:
         IMAGES[piece] = pg.transform.scale(pg.image.load(
-            "C:/Users/Luka/Documents/python/Chess/images_HR/"+piece+".png"), (SQ-int(SQ/4), SQ-int(SQ/4)))
+            "C:/Users/Luka/Documents/python/Chess/Engine/images_HR/"+piece+".png"), (SQ-int(SQ/4), SQ-int(SQ/4)))
 
 # Main Game Process
 
@@ -53,7 +53,7 @@ def mainGame(START_POS, SHOW_MOVES, WID, ai, play_As):
 
     # variables for making moves, drag animation
     move_sound = pg.mixer.Sound(
-        "C:/Users/Luka/Documents/python/Chess/move.wav")
+        "C:/Users/Luka/Documents/python/Chess/Engine/move.wav")
     running = True
     selected = ()
     sel_list = []
