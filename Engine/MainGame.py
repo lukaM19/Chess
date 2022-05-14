@@ -248,8 +248,10 @@ def mainGame(START_POS, SHOW_MOVES, WID, ai, play_As):
         # Handle pawn promotion
         if promotion_Move_w:
             promotion_Move_w,validmoves=showPrompotionOptions(font,screen,mx,my,gs,click,move,"w","b")
+            validmoves = gs.getValidMoves()
         if promotion_Move_b:
             promotion_Move_b,validmoves=showPrompotionOptions(font,screen,mx,my,gs,click,move,"b","w")
+            validmoves = gs.getValidMoves()
         end = time.time()
 
     # Quit Button and interaction on Click
@@ -317,29 +319,28 @@ def mainGame(START_POS, SHOW_MOVES, WID, ai, play_As):
 
 def showPrompotionOptions(font,screen,mx,my,gs,click,move,myColor,enemyColor):
             gs.to_Move = 'pp'
-            promotion_Move_w=True
+            promotionMove=True
             if makeButton(font,screen,"R",20).collidepoint((mx, my)):
                 if click:
                     gs.board[move.end_row][move.end_col] = myColor+"R"
-                    promotion_Move_w = False
+                    promotionMove = False
                     gs.to_Move = enemyColor
             if makeButton(font,screen,"N",40).collidepoint((mx, my)):
                 if click:
                     gs.board[move.end_row][move.end_col] = myColor+"N"
-                    promotion_Move_w = False
+                    promotionMove = False
                     gs.to_Move = enemyColor
             if makeButton(font,screen,"B",60).collidepoint((mx, my)):
                 if click:
                     gs.board[move.end_row][move.end_col] = myColor+"B"
-                    promotion_Move_w = False
+                    promotionMove= False
                     gs.to_Move = enemyColor
             if makeButton(font,screen,"Q",80).collidepoint((mx, my)):
                 if click:
                     gs.board[move.end_row][move.end_col] = myColor+"Q"
-                    promotion_Move_w = False
+                    promotionMove = False
                     gs.to_Move = enemyColor
-            validmoves = gs.getValidMoves()
-            return promotion_Move_w,validmoves
+            return promotionMove
 
 # Function for Drawing all parts of the game: Board, Pieces, Highlights
 def drawGame(screen, gs, high_sur, gh_col, bh_col, h_loc, highB, move_made, last_move, pos, t, tr, validmoves, selected, cir, SHOW_MOVES, SQ, WIDTH, HEIGHT, font):
