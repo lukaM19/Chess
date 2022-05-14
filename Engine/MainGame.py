@@ -1,3 +1,4 @@
+from matplotlib.pyplot import show
 import pygame as pg
 import sys
 import Engine
@@ -246,83 +247,9 @@ def mainGame(START_POS, SHOW_MOVES, WID, ai, play_As):
         highB = False
         # Handle pawn promotion
         if promotion_Move_w:
-            gs.to_Move = 'pp'
-            Rt = font.render("R", True, 'pink')
-            RtRect = Rt.get_rect()
-            RtRect.center = (10, 20)
-            screen.blit(Rt, RtRect)
-            if RtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "wR"
-                    promotion_Move_w = False
-                    gs.to_Move = 'b'
-            Nt = font.render("N", True, 'pink')
-            NtRect = Nt.get_rect()
-            NtRect.center = (10, 40)
-            screen.blit(Nt, NtRect)
-            if NtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "wN"
-                    promotion_Move_w = False
-                    gs.to_Move = 'b'
-            Bt = font.render("B", True, 'pink')
-            BtRect = Bt.get_rect()
-            BtRect.center = (10, 60)
-            screen.blit(Bt, BtRect)
-            if BtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "wB"
-                    promotion_Move_w = False
-                    gs.to_Move = 'b'
-            Qt = font.render("Q", True, 'pink')
-            QtRect = Qt.get_rect()
-            QtRect.center = (10, 80)
-            screen.blit(Qt, QtRect)
-            if QtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "wQ"
-                    promotion_Move_w = False
-                    gs.to_Move = 'b'
-            validmoves = gs.getValidMoves()
+            promotion_Move_w,validmoves=showPrompotionOptions(font,screen,mx,my,gs,click,move,"w","b")
         if promotion_Move_b:
-            gs.to_Move = 'pp'
-            Rt = font.render("R", True, 'pink')
-            RtRect = Rt.get_rect()
-            RtRect.center = (10, 20)
-            screen.blit(Rt, RtRect)
-            if RtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "bR"
-                    promotion_Move_b = False
-                    gs.to_Move = 'w'
-            Nt = font.render("N", True, 'pink')
-            NtRect = Nt.get_rect()
-            NtRect.center = (10, 40)
-            screen.blit(Nt, NtRect)
-            if NtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "bN"
-                    promotion_Move_b = False
-                    gs.to_Move = 'w'
-            Bt = font.render("B", True, 'pink')
-            BtRect = Bt.get_rect()
-            BtRect.center = (10, 60)
-            screen.blit(Bt, BtRect)
-            if BtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "bB"
-                    promotion_Move_b = False
-                    gs.to_Move = 'w'
-            Qt = font.render("Q", True, 'pink')
-            QtRect = Qt.get_rect()
-            QtRect.center = (10, 80)
-            screen.blit(Qt, QtRect)
-            if QtRect.collidepoint((mx, my)):
-                if click:
-                    gs.board[move.end_row][move.end_col] = "bQ"
-                    promotion_Move_b = False
-                    gs.to_Move = 'w'
-            validmoves = gs.getValidMoves()
+            promotion_Move_b,validmoves=showPrompotionOptions(font,screen,mx,my,gs,click,move,"b","w")
         end = time.time()
 
     # Quit Button and interaction on Click
@@ -388,6 +315,31 @@ def mainGame(START_POS, SHOW_MOVES, WID, ai, play_As):
         pg.display.flip()
     print('time taken:', start-end)
 
+def showPrompotionOptions(font,screen,mx,my,gs,click,move,myColor,enemyColor):
+            gs.to_Move = 'pp'
+            promotion_Move_w=True
+            if makeButton(font,screen,"R",20).collidepoint((mx, my)):
+                if click:
+                    gs.board[move.end_row][move.end_col] = myColor+"R"
+                    promotion_Move_w = False
+                    gs.to_Move = enemyColor
+            if makeButton(font,screen,"N",40).collidepoint((mx, my)):
+                if click:
+                    gs.board[move.end_row][move.end_col] = myColor+"N"
+                    promotion_Move_w = False
+                    gs.to_Move = enemyColor
+            if makeButton(font,screen,"B",60).collidepoint((mx, my)):
+                if click:
+                    gs.board[move.end_row][move.end_col] = myColor+"B"
+                    promotion_Move_w = False
+                    gs.to_Move = enemyColor
+            if makeButton(font,screen,"Q",80).collidepoint((mx, my)):
+                if click:
+                    gs.board[move.end_row][move.end_col] = myColor+"Q"
+                    promotion_Move_w = False
+                    gs.to_Move = enemyColor
+            validmoves = gs.getValidMoves()
+            return promotion_Move_w,validmoves
 
 # Function for Drawing all parts of the game: Board, Pieces, Highlights
 def drawGame(screen, gs, high_sur, gh_col, bh_col, h_loc, highB, move_made, last_move, pos, t, tr, validmoves, selected, cir, SHOW_MOVES, SQ, WIDTH, HEIGHT, font):
@@ -458,6 +410,13 @@ def drawPieces(screen, board, SQ, WIDTH, HEIGHT):
             if p != "em":
                 screen.blit(IMAGES[p], pg.Rect(
                     c*SQ+SQ/8+edge_pix, r*SQ+SQ//8+SQ//16, SQ, SQ))
+
+def makeButton(font,screen,pieceType,yPos):
+    Rt = font.render(pieceType, True, 'pink')
+    RtRect = Rt.get_rect()
+    RtRect.center = (10, yPos)
+    screen.blit(Rt, RtRect)
+    return RtRect
 
 
 def main_Menu():
