@@ -424,7 +424,7 @@ def main_Menu():
    # variables
     input = ''
     # Bool variable for indicating if we should accept input from keyboard for the FEN String
-    ST_INPUT = False
+    ACCEPT_INPUT = False
     START_POS = ""
     SHOW_MOVES = False
     click = False
@@ -443,8 +443,8 @@ def main_Menu():
             play_As = "b"
         # INITIALIZE the display
         pg.display.set_caption('MAIN MENU')
-        settings_sc = pg.display.set_mode((WIDTH+20, HEIGHT+20+20))
-        settings_sc.fill('gray')
+        settingsScreen = pg.display.set_mode((WIDTH+20, HEIGHT+20+20))
+        settingsScreen.fill('gray')
         clock = pg.time.Clock()
         button = [120, 40]
         # VALID characters that can be in the FEN notation
@@ -456,21 +456,21 @@ def main_Menu():
 
         # Set up buttons .........
        # BUTTON_1~PLAY
-        button_1 = pg.Rect(
+        playButton = pg.Rect(
             WIDTH//2-button[0]/2, HEIGHT//6-button[1]/2, 120, 40)
-        pg.draw.rect(settings_sc, 'black', button_1, 20, 5)
+        pg.draw.rect(settingsScreen, 'black', playButton, 20, 5)
         text = font.render("PLAY", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2, HEIGHT//6)
-        settings_sc.blit(text, textRect)
+        settingsScreen.blit(text, textRect)
 
        # BUTTON_2/Returnbutton~ Confirm Starting FEN
-        button_2 = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+60, 170, 40)
-        pg.draw.rect(settings_sc, 'black', button_2, 20, 3)
+        setButton = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+60, 170, 40)
+        pg.draw.rect(settingsScreen, 'black', setButton, 20, 3)
         text = font.render("Set Starting Position", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2, 100+HEIGHT//6+button[1]/2)
-        settings_sc.blit(text, textRect)
+        settingsScreen.blit(text, textRect)
 
        # BUTTON HIGHLIGHT SETTING
         button_5 = pg.Rect(WIDTH//2-85, 20+HEIGHT//6+button[1]/2+120, 170, 40)
@@ -479,27 +479,27 @@ def main_Menu():
             color = 'green'
         else:
             color = 'red'
-        pg.draw.rect(settings_sc, color, button_5, 20, 3)
+        pg.draw.rect(settingsScreen, color, button_5, 20, 3)
         text = font.render("Higlight available moves", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2, 160+HEIGHT//6+button[1]/2)
-        settings_sc.blit(text, textRect)
+        settingsScreen.blit(text, textRect)
 
        # BUTTON_3~SET SIZE
         button_Size720 = pg.Rect(
             WIDTH//2-85-2, 40+HEIGHT//6+button[1]/2+160, 85, 40)
-        pg.draw.rect(settings_sc, "black", button_Size720, 20, 3)
+        pg.draw.rect(settingsScreen, "black", button_Size720, 20, 3)
         text720 = font.render("720", True, 'white')
         textRect720 = text720.get_rect()
         textRect720.center = (WIDTH//2-42.5-2, 160+HEIGHT//6+button[1]/2+60)
-        settings_sc.blit(text720, textRect720)
+        settingsScreen.blit(text720, textRect720)
         button_Size560 = pg.Rect(
             WIDTH//2+2, 40+HEIGHT//6+button[1]/2+160, 85, 40)
-        pg.draw.rect(settings_sc, "black", button_Size560, 20, 3)
+        pg.draw.rect(settingsScreen, "black", button_Size560, 20, 3)
         text560 = font.render("560", True, 'white')
         textRect560 = text560.get_rect()
         textRect560.center = (WIDTH//2+42.5+2, 160+HEIGHT//6+button[1]/2+60)
-        settings_sc.blit(text560, textRect560)
+        settingsScreen.blit(text560, textRect560)
 
        # BUTTONS FOR GAME SETTINGS
         button_Ai = pg.Rect(
@@ -507,11 +507,11 @@ def main_Menu():
         color = "red"
         if ai:
             color = "green"
-        pg.draw.rect(settings_sc, color, button_Ai, 20, 3)
+        pg.draw.rect(settingsScreen, color, button_Ai, 20, 3)
         text = font.render("Play against AI", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2-65, 5*HEIGHT//6-40)
-        settings_sc.blit(text, textRect)
+        settingsScreen.blit(text, textRect)
         # Choose ai color
         if ai:
             button_Pl_As = pg.Rect(
@@ -523,38 +523,38 @@ def main_Menu():
                 color = "black"
                 ct = "white"
                 txt = "Play as Black"
-            pg.draw.rect(settings_sc, color, button_Pl_As, 20, 3)
+            pg.draw.rect(settingsScreen, color, button_Pl_As, 20, 3)
             text = font.render(txt, True, ct)
             textRect = text.get_rect()
             textRect.center = (WIDTH//2+65, 5*HEIGHT//6-40)
-            settings_sc.blit(text, textRect)
+            settingsScreen.blit(text, textRect)
             if button_Pl_As.collidepoint((mx, my)) and click:
                 pa = not pa
 
        # BUTTON_4~Quit Button
-        button_4 = pg.Rect(
+        quitButton = pg.Rect(
             WIDTH//2-button[0]/2, 5*HEIGHT//6-button[1]/2+40, 120, 40)
-        pg.draw.rect(settings_sc, 'red', button_4, 20, 3)
+        pg.draw.rect(settingsScreen, 'red', quitButton, 20, 3)
         text = font.render("QUIT", True, 'white')
         textRect = text.get_rect()
         textRect.center = (WIDTH//2, 5*HEIGHT//6+40)
-        settings_sc.blit(text, textRect)
+        settingsScreen.blit(text, textRect)
 
         # ...............
        # Intercations..........
         # Mouse position
         mx, my = pg.mouse.get_pos()
         # Play~ Launch the game
-        if button_1.collidepoint((mx, my)):
+        if playButton.collidepoint((mx, my)):
             if click:
 
                 mainGame(START_POS, SHOW_MOVES, WIDTH, ai, play_As)
         # Set the input string as the starting positoin
-        if button_2.collidepoint((mx, my)):
+        if setButton.collidepoint((mx, my)):
             if click:
                 START_POS = input
         # Quit button
-        if button_4.collidepoint((mx, my)):
+        if quitButton.collidepoint((mx, my)):
             if click:
                 pg.quit()
                 sys.exit()
@@ -592,36 +592,36 @@ def main_Menu():
                     input = input[:-1]
                 # Confirm input
                 if e.key == pg.K_RETURN:
-                    ST_INPUT = False
+                    ACCEPT_INPUT = False
                 # if valid FEN Character, and input is started add to the input string
-                if e.key in valid_asc and ST_INPUT:
+                if e.key in valid_asc and ACCEPT_INPUT:
                     if mods & pg.KMOD_CAPS or mods & pg.KMOD_LSHIFT:
                         input += e.unicode
                     else:
                         input += e.unicode.lower()
 
             # Take in the input for the FEN String
-            font_i = pg.font.Font('freesansbold.ttf', 12)
-            inp_text = font_i.render(input, True, 'green')
-            inp_box = pg.Rect(20, 20+HEIGHT//6+button[1]/2, 174, 40)
+            inputFont = pg.font.Font('freesansbold.ttf', 12)
+            inputText = inputFont.render(input, True, 'green')
+            inputBox = pg.Rect(20, 20+HEIGHT//6+button[1]/2, 174, 40)
             # Indicate by colors if we are currently accepting keyboard input for FEN
-            if ST_INPUT:
-                pg.draw.rect(settings_sc, 'blue', inp_box, 20, 3)
+            if ACCEPT_INPUT:
+                pg.draw.rect(settingsScreen, 'blue', inputBox, 20, 3)
             else:
-                pg.draw.rect(settings_sc, 'navy', inp_box, 20, 3)
-            I_box_text = font_i.render(
+                pg.draw.rect(settingsScreen, 'navy', inputBox, 20, 3)
+            inputBoxText = inputFont.render(
                 "Put custom position FEN here:", True, 'green')
-            settings_sc.blit(I_box_text, (inp_box.x, inp_box.y+12))
+            settingsScreen.blit(inputBoxText, (inputBox.x, inputBox.y+12))
             # Change input box width if needed
-            button_3_w = max(250, inp_text.get_width()+5)
-            button_3 = pg.Rect(20+I_box_text.get_width()+2,
-                               20+HEIGHT//6+button[1]/2, button_3_w, 40)
-            pg.draw.rect(settings_sc, 'black', button_3)
-            settings_sc.blit(inp_text, (button_3.x+5, button_3.y+5))
+            button3Width = max(250, inputText.get_width()+5)
+            button3 = pg.Rect(20+inputBoxText.get_width()+2,
+                               20+HEIGHT//6+button[1]/2, button3Width, 40)
+            pg.draw.rect(settingsScreen, 'black', button3)
+            settingsScreen.blit(inputText, (button3.x+5, button3.y+5))
             # Start taking input if the input box ahs been clicked
-            if button_3.collidepoint((mx, my)):
+            if button3.collidepoint((mx, my)):
                 if click:
-                    ST_INPUT = not ST_INPUT
+                    ACCEPT_INPUT = not ACCEPT_INPUT
 
             pg.display.flip()
             clock.tick(60)
